@@ -1,0 +1,7 @@
+<!doctype html>
+<script>
+  var id = parseInt(location.search.substring(1))
+  location.replace(
+      'https://github.com/iischajn/iischajn.github.com/issues' +
+          (id ? '/' + id : '?labels=blog'))
+</script>
