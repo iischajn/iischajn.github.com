@@ -1,6 +1,7 @@
 <!doctype html>
 <script>
-  var id = parseInt(location.search.substring(1))
+  var query = location.search.match(/issues=(\d+)/);
+  var id = query ? query[1] : '';
   location.replace(
       'https://github.com/iischajn/iischajn.github.com/issues' +
           (id ? '/' + id : '?labels=blog'))
