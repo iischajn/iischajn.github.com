@@ -1,0 +1,1585 @@
+<html>
+    <head>
+        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+        <title>Google HTML/CSS代码风格指南</title>
+        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+        <link rel="shortcut icon" type="image/x-icon" href="http://www.google.com/favicon.ico">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <script type="text/javascript" language="javascript">
+        
+                        function GetElementsByName(name) {
+                          // Workaround a bug on old versions of opera.
+                          if (document.getElementsByName) {
+                            return document.getElementsByName(name);
+                          } else {
+                            return [document.getElementById(name)];
+                          }
+                        }
+        
+                        /**
+                         * @param {string} namePrefix The prefix of the body name.
+                         * @param {function(boolean): boolean} getVisibility Computes the new
+                         *     visibility state, given the current one.
+                         */
+                        function ChangeVisibility(namePrefix, getVisibility) {
+                          var bodyName = namePrefix + '__body';
+                          var buttonName = namePrefix + '__button';
+                          var bodyElements = GetElementsByName(bodyName);
+                          var linkElement = GetElementsByName('link-' + buttonName)[0];
+                          if (bodyElements.length != 1) {
+                            throw Error('ShowHideByName() got the wrong number of bodyElements:  ' + 
+                                bodyElements.length);
+                          } else {
+                            var bodyElement = bodyElements[0];
+                            var buttonElement = GetElementsByName(buttonName)[0];
+                            var isVisible = bodyElement.style.display != "none";
+                            if (getVisibility(isVisible)) {
+                              bodyElement.style.display = "inline";
+                              linkElement.style.display = "block";
+                              buttonElement.innerHTML = '▽';
+                            } else {
+                              bodyElement.style.display = "none";
+                              linkElement.style.display = "none";
+                              buttonElement.innerHTML = '▶';
+                            }
+                          }
+                        }
+        
+                        function ShowHideByName(namePrefix) {
+                          ChangeVisibility(namePrefix, function(old) { return !old; });
+                        }
+        
+                        function ShowByName(namePrefix) {
+                          ChangeVisibility(namePrefix, function() { return true; });
+                        }
+        
+                        function ShowHideAll() {
+                          var allButton = GetElementsByName("show_hide_all_button")[0];
+                          if (allButton.innerHTML == '▽') {
+                            allButton.innerHTML = '▶';
+                            SetHiddenState(document.getElementsByTagName("body")[0].childNodes, "none", '▶');
+                          } else {
+                            allButton.innerHTML = '▽';
+                            SetHiddenState(document.getElementsByTagName("body")[0].childNodes, "inline", '▽');
+                          }
+                        }
+        
+                        // Recursively sets state of all children
+                        // of a particular node.
+                        function SetHiddenState(root, newState, newButton) {
+                          for (var i = 0; i != root.length; i++) {
+                            SetHiddenState(root[i].childNodes, newState, newButton);
+                            if (root[i].className == 'showhide_button')  {
+                              root[i].innerHTML = newButton;
+                            }
+                            if (root[i].className == 'stylepoint_body' ||
+                                root[i].className == 'link_button')  {
+                              root[i].style.display = newState;
+                            }
+                          }
+                        }
+        
+        
+                        function EndsWith(str, suffix) {
+                          var l = str.length - suffix.length;
+                          return l >= 0 && str.indexOf(suffix, l) == l;
+                        }
+        
+                        function RefreshVisibilityFromHashParam() {
+                          var hashRegexp = new RegExp('#([^&#]*)$');
+                          var hashMatch = hashRegexp.exec(window.location.href);
+                          var anchor = hashMatch && GetElementsByName(hashMatch[1])[0];
+                          var node = anchor;
+                          var suffix = '__body';
+                          while (node) {
+                            var id = node.id;
+                            var matched = id && EndsWith(id, suffix);
+                            if (matched) {
+                              var len = id.length - suffix.length;
+                              ShowByName(matched.substring(0, len));
+                              if (anchor.scrollIntoView) {
+                                anchor.scrollIntoView();
+                              }
+                              
+                              return;
+                            }
+                            node = node.parentNode;
+                          }
+                        }
+        
+                        window.onhashchange = RefreshVisibilityFromHashParam;
+        
+                        window.onload = function() {
+                          // if the URL contains "?showall=y", expand the details of all children
+                          var showHideAllRegex = new RegExp("[\\?&](showall)=([^&#]*)");
+                          var showHideAllValue = showHideAllRegex.exec(window.location.href);
+                          if (showHideAllValue != null) {
+                            if (showHideAllValue[2] == "y") {
+                              SetHiddenState(document.getElementsByTagName("body")[0].childNodes, 
+                                  "inline", '▽');
+                            } else {
+                              SetHiddenState(document.getElementsByTagName("body")[0].childNodes, 
+                                  "none", '▶');
+                            }
+                          }
+                          var showOneRegex = new RegExp("[\\?&](showone)=([^&#]*)");
+                          var showOneValue = showOneRegex.exec(window.location.href);
+                          if (showOneValue) {
+                            ShowHideByName(showOneValue[2]);
+                          }
+        
+        
+                          RefreshVisibilityFromHashParam();
+                        }
+                      
+        </script>
+        <style type="text/css" charset="utf-8">
+            /* See license.txt for terms of usage */
+            /** reset styling **/
+            .firebugResetStyles {
+                z-index: 2147483646 !important;
+                top: 0 !important;
+                left: 0 !important;
+                display: block !important;
+                border: 0 none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                outline: 0 !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                position: fixed !important;
+                -moz-transform: rotate(0deg) !important;
+                -moz-transform-origin: 50% 50% !important;
+                -moz-border-radius: 0 !important;
+                -moz-box-shadow: none !important;
+                background: transparent none !important;
+                pointer-events: none !important;
+            }
+            
+            .firebugBlockBackgroundColor {
+                background-color: transparent !important;
+            }
+            
+            .firebugResetStyles:before, .firebugResetStyles:after {
+                content: "" !important;
+            }
+            
+            /**actual styling to be modified by firebug theme**/
+            .firebugCanvas {
+                display: none !important;
+            }
+            
+            /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+            .firebugLayoutBox {
+                width: auto !important;
+                position: static !important;
+            }
+            
+            .firebugLayoutBoxOffset {
+                opacity: 0.8 !important;
+                position: fixed !important;
+            }
+            
+            .firebugLayoutLine {
+                opacity: 0.4 !important;
+                background-color: #000000 !important;
+            }
+            
+            .firebugLayoutLineLeft, .firebugLayoutLineRight {
+                width: 1px !important;
+                height: 100% !important;
+            }
+            
+            .firebugLayoutLineTop, .firebugLayoutLineBottom {
+                width: 100% !important;
+                height: 1px !important;
+            }
+            
+            .firebugLayoutLineTop {
+                margin-top: -1px !important;
+                border-top: 1px solid #999999 !important;
+            }
+            
+            .firebugLayoutLineRight {
+                border-right: 1px solid #999999 !important;
+            }
+            
+            .firebugLayoutLineBottom {
+                border-bottom: 1px solid #999999 !important;
+            }
+            
+            .firebugLayoutLineLeft {
+                margin-left: -1px !important;
+                border-left: 1px solid #999999 !important;
+            }
+            
+            /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+            .firebugLayoutBoxParent {
+                border-top: 0 none !important;
+                border-right: 1px dashed #E00 !important;
+                border-bottom: 1px dashed #E00 !important;
+                border-left: 0 none !important;
+                position: fixed !important;
+                width: auto !important;
+            }
+            
+            .firebugRuler {
+                position: absolute !important;
+            }
+            
+            .firebugRulerH {
+                top: -15px !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 14px !important;
+                background: url("data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%13%88%00%00%00%0E%08%02%00%00%00L%25a%0A%00%00%00%04gAMA%00%00%D6%D8%D4OX2%00%00%00%19tEXtSoftware%00Adobe%20ImageReadyq%C9e%3C%00%00%04%F8IDATx%DA%EC%DD%D1n%E2%3A%00E%D1%80%F8%FF%EF%E2%AF2%95%D0D4%0E%C1%14%B0%8Fa-%E9%3E%CC%9C%87n%B9%81%A6W0%1C%A6i%9A%E7y%0As8%1CT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AATE9%FE%FCw%3E%9F%AF%2B%2F%BA%97%FDT%1D~K(%5C%9D%D5%EA%1B%5C%86%B5%A9%BDU%B5y%80%ED%AB*%03%FAV9%AB%E1%CEj%E7%82%EF%FB%18%BC%AEJ8%AB%FA'%D2%BEU9%D7U%ECc0%E1%A2r%5DynwVi%CFW%7F%BB%17%7Dy%EACU%CD%0E%F0%FA%3BX%FEbV%FEM%9B%2B%AD%BE%AA%E5%95v%AB%AA%E3E5%DCu%15rV9%07%B5%7F%B5w%FCm%BA%BE%AA%FBY%3D%14%F0%EE%C7%60%0EU%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5JU%88%D3%F5%1F%AE%DF%3B%1B%F2%3E%DAUCNa%F92%D02%AC%7Dm%F9%3A%D4%F2%8B6%AE*%BF%5C%C2Ym~9g5%D0Y%95%17%7C%C8c%B0%7C%18%26%9CU%CD%13i%F7%AA%90%B3Z%7D%95%B4%C7%60%E6E%B5%BC%05%B4%FBY%95U%9E%DB%FD%1C%FC%E0%9F%83%7F%BE%17%7DkjMU%E3%03%AC%7CWj%DF%83%9An%BCG%AE%F1%95%96yQ%0Dq%5Dy%00%3Et%B5'%FC6%5DS%95pV%95%01%81%FF'%07%00%00%00%00%00%00%00%00%00%F8x%C7%F0%BE%9COp%5D%C9%7C%AD%E7%E6%EBV%FB%1E%E0(%07%E5%AC%C6%3A%ABi%9C%8F%C6%0E9%AB%C0'%D2%8E%9F%F99%D0E%B5%99%14%F5%0D%CD%7F%24%C6%DEH%B8%E9rV%DFs%DB%D0%F7%00k%FE%1D%84%84%83J%B8%E3%BA%FB%EF%20%84%1C%D7%AD%B0%8E%D7U%C8Y%05%1E%D4t%EF%AD%95Q%BF8w%BF%E9%0A%BF%EB%03%00%00%00%00%00%00%00%00%00%B8vJ%8E%BB%F5%B1u%8Cx%80%E1o%5E%CA9%AB%CB%CB%8E%03%DF%1D%B7T%25%9C%D5(%EFJM8%AB%CC'%D2%B2*%A4s%E7c6%FB%3E%FA%A2%1E%80~%0E%3E%DA%10x%5D%95Uig%15u%15%ED%7C%14%B6%87%A1%3B%FCo8%A8%D8o%D3%ADO%01%EDx%83%1A~%1B%9FpP%A3%DC%C6'%9C%95gK%00%00%00%00%00%00%00%00%00%20%D9%C9%11%D0%C0%40%AF%3F%EE%EE%92%94%D6%16X%B5%BCMH%15%2F%BF%D4%A7%C87%F1%8E%F2%81%AE%AAvzr%DA2%ABV%17%7C%E63%83%E7I%DC%C6%0Bs%1B%EF6%1E%00%00%00%00%00%00%00%00%00%80cr%9CW%FF%7F%C6%01%0E%F1%CE%A5%84%B3%CA%BC%E0%CB%AA%84%CE%F9%BF)%EC%13%08WU%AE%AB%B1%AE%2BO%EC%8E%CBYe%FE%8CN%ABr%5Dy%60~%CFA%0D%F4%AE%D4%BE%C75%CA%EDVB%EA(%B7%F1%09g%E5%D9%12%00%00%00%00%00%00%00%00%00H%F6%EB%13S%E7y%5E%5E%FB%98%F0%22%D1%B2'%A7%F0%92%B1%BC%24z3%AC%7Dm%60%D5%92%B4%7CEUO%5E%F0%AA*%3BU%B9%AE%3E%A0j%94%07%A0%C7%A0%AB%FD%B5%3F%A0%F7%03T%3Dy%D7%F7%D6%D4%C0%AAU%D2%E6%DFt%3F%A8%CC%AA%F2%86%B9%D7%F5%1F%18%E6%01%F8%CC%D5%9E%F0%F3z%88%AA%90%EF%20%00%00%00%00%00%00%00%00%00%C0%A6%D3%EA%CFi%AFb%2C%7BB%0A%2B%C3%1A%D7%06V%D5%07%A8r%5D%3D%D9%A6%CAu%F5%25%CF%A2%99%97zNX%60%95%AB%5DUZ%D5%FBR%03%AB%1C%D4k%9F%3F%BB%5C%FF%81a%AE%AB'%7F%F3%EA%FE%F3z%94%AA%D8%DF%5B%01%00%00%00%00%00%00%00%00%00%8E%FB%F3%F2%B1%1B%8DWU%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*UiU%C7%BBe%E7%F3%B9%CB%AAJ%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5J%95*U%AAT%A9R%A5*%AAj%FD%C6%D4%5Eo%90%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5%86%AF%1B%9F%98%DA%EBm%BBV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%ADV%AB%D5j%B5Z%AD%D6%E4%F58%01%00%00%00%00%00%00%00%00%00%00%00%00%00%40%85%7F%02%0C%008%C2%D0H%16j%8FX%00%00%00%00IEND%AEB%60%82") repeat-x !important;
+                border-top: 1px solid #BBBBBB !important;
+                border-right: 1px dashed #BBBBBB !important;
+                border-bottom: 1px solid #000000 !important;
+            }
+            
+            .firebugRulerV {
+                top: 0 !important;
+                left: -15px !important;
+                width: 14px !important;
+                height: 100% !important;
+                background: url("data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%0E%00%00%13%88%08%02%00%00%00%0E%F5%CB%10%00%00%00%04gAMA%00%00%D6%D8%D4OX2%00%00%00%19tEXtSoftware%00Adobe%20ImageReadyq%C9e%3C%00%00%06~IDATx%DA%EC%DD%D1v%A20%14%40Qt%F1%FF%FF%E4%97%D9%07%3BT%19%92%DC%40(%90%EEy%9A5%CB%B6%E8%F6%9Ac%A4%CC0%84%FF%DC%9E%CF%E7%E3%F1%88%DE4%F8%5D%C7%9F%2F%BA%DD%5E%7FI%7D%F18%DDn%BA%C5%FB%DF%97%BFk%F2%10%FF%FD%B4%F2M%A7%FB%FD%FD%B3%22%07p%8F%3F%AE%E3%F4S%8A%8F%40%EEq%9D%BE8D%F0%0EY%A1Uq%B7%EA%1F%81%88V%E8X%3F%B4%CEy%B7h%D1%A2E%EBohU%FC%D9%AF2fO%8BBeD%BE%F7X%0C%97%A4%D6b7%2Ck%A5%12%E3%9B%60v%B7r%C7%1AI%8C%BD%2B%23r%00c0%B2v%9B%AD%CA%26%0C%1Ek%05A%FD%93%D0%2B%A1u%8B%16-%95q%5Ce%DCSO%8E%E4M%23%8B%F7%C2%FE%40%BB%BD%8C%FC%8A%B5V%EBu%40%F9%3B%A72%FA%AE%8C%D4%01%CC%B5%DA%13%9CB%AB%E2I%18%24%B0n%A9%0CZ*Ce%9C%A22%8E%D8NJ%1E%EB%FF%8F%AE%CAP%19*%C3%BAEKe%AC%D1%AAX%8C*%DEH%8F%C5W%A1e%AD%D4%B7%5C%5B%19%C5%DB%0D%EF%9F%19%1D%7B%5E%86%BD%0C%95%A12%AC%5B*%83%96%CAP%19%F62T%86%CAP%19*%83%96%CA%B8Xe%BC%FE)T%19%A1%17xg%7F%DA%CBP%19*%C3%BA%A52T%86%CAP%19%F62T%86%CA%B0n%A9%0CZ%1DV%C6%3D%F3%FCH%DE%B4%B8~%7F%5CZc%F1%D6%1F%AF%84%F9%0F6%E6%EBVt9%0E~%BEr%AF%23%B0%97%A12T%86%CAP%19%B4T%86%CA%B8Re%D8%CBP%19*%C3%BA%A52huX%19%AE%CA%E5%BC%0C%7B%19*CeX%B7h%A9%0C%95%E1%BC%0C%7B%19*CeX%B7T%06%AD%CB%5E%95%2B%BF.%8F%C5%97%D5%E4%7B%EE%82%D6%FB%CF-%9C%FD%B9%CF%3By%7B%19%F62T%86%CA%B0n%D1R%19*%A3%D3%CA%B0%97%A12T%86uKe%D0%EA%B02*%3F1%99%5DB%2B%A4%B5%F8%3A%7C%BA%2B%8Co%7D%5C%EDe%A8%0C%95a%DDR%19%B4T%C66%82fA%B2%ED%DA%9FC%FC%17GZ%06%C9%E1%B3%E5%2C%1A%9FoiB%EB%96%CA%A0%D5qe4%7B%7D%FD%85%F7%5B%ED_%E0s%07%F0k%951%ECr%0D%B5C%D7-g%D1%A8%0C%EB%96%CA%A0%A52T%C6)*%C3%5E%86%CAP%19%D6-%95A%EB*%95q%F8%BB%E3%F9%AB%F6%E21%ACZ%B7%22%B7%9B%3F%02%85%CB%A2%5B%B7%BA%5E%B7%9C%97%E1%BC%0C%EB%16-%95%A12z%AC%0C%BFc%A22T%86uKe%D0%EA%B02V%DD%AD%8A%2B%8CWhe%5E%AF%CF%F5%3B%26%CE%CBh%5C%19%CE%CB%B0%F3%A4%095%A1%CAP%19*Ce%A8%0C%3BO*Ce%A8%0C%95%A12%3A%AD%8C%0A%82%7B%F0v%1F%2FD%A9%5B%9F%EE%EA%26%AF%03%CA%DF9%7B%19*Ce%A8%0C%95%A12T%86%CA%B8Ze%D8%CBP%19*Ce%A8%0C%95%D1ae%EC%F7%89I%E1%B4%D7M%D7P%8BjU%5C%BB%3E%F2%20%D8%CBP%19*Ce%A8%0C%95%A12T%C6%D5*%C3%5E%86%CAP%19*Ce%B4O%07%7B%F0W%7Bw%1C%7C%1A%8C%B3%3B%D1%EE%AA%5C%D6-%EBV%83%80%5E%D0%CA%10%5CU%2BD%E07YU%86%CAP%19*%E3%9A%95%91%D9%A0%C8%AD%5B%EDv%9E%82%FFKOee%E4%8FUe%A8%0C%95%A12T%C6%1F%A9%8C%C8%3D%5B%A5%15%FD%14%22r%E7B%9F%17l%F8%BF%ED%EAf%2B%7F%CF%ECe%D8%CBP%19*Ce%A8%0C%95%E1%93~%7B%19%F62T%86%CAP%19*Ce%A8%0C%E7%13%DA%CBP%19*Ce%A8%0CZf%8B%16-Z%B4h%D1R%19f%8B%16-Z%B4h%D1R%19%B4%CC%16-Z%B4h%D1R%19%B4%CC%16-Z%B4h%D1%A2%A52%CC%16-Z%B4h%D1%A2%A52h%99-Z%B4h%D1%A2%A52h%99-Z%B4h%D1%A2EKe%98-Z%B4h%D1%A2EKe%D02%5B%B4h%D1%A2EKe%D02%5B%B4h%D1%A2E%8B%96%CA0%5B%B4h%D1%A2E%8B%96%CA%A0e%B6h%D1%A2E%8B%96%CA%A0e%B6h%D1%A2E%8B%16-%95a%B6h%D1%A2E%8B%16-%95A%CBl%D1%A2E%8B%16-%95A%CBl%D1%A2E%8B%16-Z*%C3l%D1%A2E%8B%16-Z*%83%96%D9%A2E%8B%16-Z*%83%96%D9%A2E%8B%16-Z%B4T%86%D9%A2E%8B%16-Z%B4T%06-%B3E%8B%16-Z%B4T%06-%B3E%8B%16-Z%B4h%A9%0C%B3E%8B%16-Z%B4h%A9%0CZf%8B%16-Z%B4h%A9%0CZf%8B%16-Z%B4h%D1R%19f%8B%16-Z%B4h%D1R%19%B4%CC%16-Z%B4h%D1R%19%B4%CC%16-Z%B4h%D1%A2%A52%CC%16-Z%B4h%D1%A2%A52h%99-Z%B4h%D1%A2%A52h%99-Z%B4h%D1%A2EKe%98-Z%B4h%D1%A2EKe%D02%5B%B4h%D1%A2EKe%D02%5B%B4h%D1%A2E%8B%96%CA0%5B%B4h%D1%A2E%8B%96%CA%A0e%B6h%D1%A2E%8B%96%CA%A0e%B6h%D1%A2E%8B%16-%95a%B6h%D1%A2E%8B%16-%95A%CBl%D1%A2E%8B%16-%95A%CBl%D1%A2E%8B%16-Z*%C3l%D1%A2E%8B%16-Z*%83%96%D9%A2E%8B%16-Z*%83%96%D9%A2E%8B%16-Z%B4T%86%D9%A2E%8B%16-Z%B4T%06-%B3E%8B%16-Z%B4T%06-%B3E%8B%16-Z%B4h%A9%0C%B3E%8B%16-Z%B4h%A9%0CZf%8B%16-Z%B4h%A9%0CZf%8B%16-Z%B4h%D1R%19f%8B%16-Z%B4h%D1R%19%B4%CC%16-Z%B4h%D1R%19%B4%CC%16-Z%B4h%D1%A2%A52%CC%16-Z%B4h%D1%A2%A52h%99-Z%B4h%D1%A2%A52h%99-Z%B4h%D1%A2EKe%98-Z%B4h%D1%A2EKe%D02%5B%B4h%D1%A2EKe%D02%5B%B4h%D1%A2E%8B%96%CA0%5B%B4h%D1%A2E%8B%96%CA%A0e%B6h%D1%A2E%8B%96%CA%A0e%B6h%D1%A2E%8B%16-%95a%B6h%D1%A2E%8B%16-%95A%CBl%D1%A2E%8B%16-%95A%CBl%D1%A2E%8B%16-Z*%C3l%D1%A2E%8B%16-Z*%83%96%D9%A2E%8B%16-Z*%83%96%D9%A2E%8B%16-Z%B4T%86%D9%A2E%8B%16-Z%B4T%06-%B3E%8B%16-Z%B4%AE%A4%F5%25%C0%00%DE%BF%5C'%0F%DA%B8q%00%00%00%00IEND%AEB%60%82") repeat-y !important;
+                border-left: 1px solid #BBBBBB !important;
+                border-right: 1px solid #000000 !important;
+                border-bottom: 1px dashed #BBBBBB !important;
+            }
+            
+            .overflowRulerX > .firebugRulerV {
+                left: 0 !important;
+            }
+            
+            .overflowRulerY > .firebugRulerH {
+                top: 0 !important;
+            }
+            
+            /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+            .fbProxyElement {
+                position: fixed !important;
+                pointer-events: auto !important;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Google HTML/CSS代码风格指南</h1>
+        <p class="revision">
+            修正版本 2.1
+        </p>
+        <div style="margin-left: 50%; font-size: 75%;">
+            <p>
+                每个风格点都有一个展开/收起按钮以便你可以得到更多的信息:<span style="margin-left: 0; float: none" class="showhide_button">▶</span>.
+                你可以将全部展开或收起:
+            </p>
+            <div style=" font-size: larger; margin-left: +2em;">
+                <span id="show_hide_all_button" name="show_hide_all_button" onclick="javascript:ShowHideAll()" style="font-size: 180%; float: none" class="showhide_button">▶</span>
+                全部展开/全部收起
+            </div>
+        </div>
+        <div class="toc">
+            <div class="toc_title">
+                内容树
+            </div>
+            <table>
+                <tbody>
+                    <tr class="" valign="top">
+                        <td>
+                            <div class="toc_category">
+                                <a href="#General_Style_Rules">样式规则</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="toc_stylepoint">
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Protocol">协议</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="" valign="top">
+                        <td>
+                            <div class="toc_category">
+                                <a href="#General_Formatting_Rules">排版规则</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="toc_stylepoint">
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Indentation">缩进</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Capitalization">大小写</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Trailing_whitespace">行尾空格</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="" valign="top">
+                        <td>
+                            <div class="toc_category">
+                                <a href="#General_Meta_Rules">元数据规则</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="toc_stylepoint">
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Encoding">编码</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Comments">注释</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Action_items">活动的条目</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="" valign="top">
+                        <td>
+                            <div class="toc_category">
+                                <a href="#HTML_Style_Rules">HTML代码风格规则</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="toc_stylepoint">
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Document_type">文档类型</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#HTML_validity">HTML有效性</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Semantics">语义</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Multimedia_fallback">多媒体后备方案</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Separation_of_concerns">关注点分离</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Entity_references">实体引用</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Optional_tags">可选标签</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#type_attributes">type属性</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="" valign="top">
+                        <td>
+                            <div class="toc_category">
+                                <a href="#HTML_Formatting_Rules">HTML代码格式规则</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="toc_stylepoint">
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#General_formatting">格式</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="" valign="top">
+                        <td>
+                            <div class="toc_category">
+                                <a href="#CSS_Style_Rules">CSS代码风格规则</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="toc_stylepoint">
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#CSS_validity">CSS代码有效性</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#ID_and_class_naming">ID和class的命名</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#ID_and_class_name_style">ID和class命名风格</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Type_selectors">类型选择器</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Shorthand_properties">属性缩写</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#0_and_units">0和单位</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Leading_0s">0开头的小数</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Quotation_marks_in_URI_values">URI外的引号</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Hexadecimal_notation">十六进制</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Prefixes">前缀</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#ID_and_class_name_delimiters">ID和class命名的定界符</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Hacks">Hacks</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="" valign="top">
+                        <td>
+                            <div class="toc_category">
+                                <a href="#CSS_Formatting_Rules">CSS代码格式规则</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="toc_stylepoint">
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Declaration_order">声明顺序</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Block_content_indentation">代码块内容缩进</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Declaration_stops">声明完结</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Property_name_stops">属性名完结</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Selector_and_declaration_separation">选择器和声明分行</a></span>
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Rule_separation">规则分行</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="" valign="top">
+                        <td>
+                            <div class="toc_category">
+                                <a href="#CSS_Meta_Rules">CSS元数据规则</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="toc_stylepoint">
+                                <span class="" style="padding-right: 1em; white-space:nowrap;"><a href="#Section_comments">注释部分</a></span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="">
+            <h2 id="Background" name="Background">背景</h2>
+            <p>
+                本文档定义了HTML/CSS的编写格式和风格规则。它旨在提高合作和代码质量,并使其支持基础架构。适用于HTML/CSS文件，包括GSS文件。
+                只要代码质量是可以被维护的，就能很好的被工具混淆、压缩和合并。
+            </p>
+        </div>
+        <div class="">
+            <h2 id="General_Style_Rules" name="General_Style_Rules">样式规则</h2>
+            <div class="">
+                <h3><a id="Protocol" name="Protocol">协议</a></h3>
+                <span name="link-Protocol__button" id="link-Protocol__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Protocol#Protocol"> 原文</a></span>
+                <span id="Protocol__button" name="Protocol__button" onclick="javascript:ShowHideByName('Protocol')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    嵌入式资源书写省略协议头
+                </div>
+                <div class="">
+                    <div style="display: none" id="Protocol__body" name="Protocol__body" class="stylepoint_body">
+                        <p>
+                            省略图像、媒体文件、样式表和脚本等URL协议头部声明 (
+                            <code>
+                                http:
+                            </code>,
+                            <code>
+                                https:
+                            </code>)。如果不是这两个声明的URL则不省略。
+                        </p>
+                        <p>
+                            省略协议声明，使URL成相对地址，防止内容混淆问题和导致小文件重复下载。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;script src="http://www.google.com/js/gweb/analytics/autotrack.js"&gt;&lt;/script&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;script src="//www.google.com/js/gweb/analytics/autotrack.js"&gt;&lt;/script&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐 */
+.example {
+  background: url(http://www.google.com/images/example);
+}</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+.example {
+  background: url(//www.google.com/images/example);
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="">
+            <h2 id="General_Formatting_Rules" name="General_Formatting_Rules">排版规则</h2>
+            <div class="">
+                <h3><a id="Indentation" name="Indentation">缩进</a></h3>
+                <span name="link-Indentation__button" id="link-Indentation__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Indentation#Indentation"> 原文</a></span>
+                <span id="Indentation__button" name="Indentation__button" onclick="javascript:ShowHideByName('Indentation')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    每次缩进两个空格。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Indentation__body" name="Indentation__body" class="stylepoint_body">
+                        <p>
+                            不要用TAB键或多个空格来进行缩进。
+                        </p>
+                        <div class="">
+                            <pre>&lt;ul&gt;
+  &lt;li&gt;Fantastic
+  &lt;li&gt;Great
+&lt;/ul&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>.example {
+  color: blue;
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Capitalization" name="Capitalization">大小写</a></h3>
+                <span name="link-Capitalization__button" id="link-Capitalization__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Capitalization#Capitalization"> 原文</a></span>
+                <span id="Capitalization__button" name="Capitalization__button" onclick="javascript:ShowHideByName('Capitalization')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    只用小写字母。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Capitalization__body" name="Capitalization__body" class="stylepoint_body">
+                        <p>
+                            所有的代码都用小写字母：适用于元素名，属性，属性值（除了文本和
+                            <code>
+                                CDATA
+                            </code>）， 选择器，特性，特性值（除了字符串）。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;A HREF="/"&gt;Home&lt;/A&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;img src="google.png" alt="Google"&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Trailing_whitespace" name="Trailing_whitespace">行尾空格</a></h3>
+                <span name="link-Trailing_whitespace__button" id="link-Trailing_whitespace__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Trailing_whitespace#Trailing_whitespace"> 原文</a></span>
+                <span id="Trailing_whitespace__button" name="Trailing_whitespace__button" onclick="javascript:ShowHideByName('Trailing_whitespace')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    删除行尾白空格。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Trailing_whitespace__body" name="Trailing_whitespace__body" class="stylepoint_body">
+                        <p>
+                            行尾空格没必要存在。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;p&gt;What?_</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;p&gt;Yes please.</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="">
+            <h2 id="General_Meta_Rules" name="General_Meta_Rules">元数据规则</h2>
+            <div class="">
+                <h3><a id="Encoding" name="Encoding">编码</a></h3>
+                <span name="link-Encoding__button" id="link-Encoding__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Encoding#Encoding"> 原文</a></span>
+                <span id="Encoding__button" name="Encoding__button" onclick="javascript:ShowHideByName('Encoding')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    用不带BOM头的 UTF-8编码。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Encoding__body" name="Encoding__body" class="stylepoint_body">
+                        <p>
+                            让你的编辑器用没有字节顺序标记的UTF-8编码格式进行编写。
+                        </p>
+                        <p>
+                            在HTML模板和文件中指定编码
+                            <code>
+                                &lt;meta charset="utf-8"&gt;
+                            </code>. 不需要制定样式表的编码，它默认为UTF-8.
+                        </p>
+                        <p>
+                            （更多有关于编码的信息和怎样指定它，请查看 <a href="http://www.w3.org/International/tutorials/tutorial-char-enc/en/all.html">Character
+                                Sets &amp; Encodings in XHTML, HTML and CSS</a>。）
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Comments" name="Comments">注释</a></h3>
+                <span name="link-Comments__button" id="link-Comments__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Comments#Comments"> 原文</a></span>
+                <span id="Comments__button" name="Comments__button" onclick="javascript:ShowHideByName('Comments')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    尽可能的去解释你写的代码。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Comments__body" name="Comments__body" class="stylepoint_body">
+                        <p>
+                            用注释来解释代码：它包括什么，它的目的是什么，它能做什么，为什么使用这个解决方案，还是说只是因为偏爱如此呢？
+                        </p>
+                        <p>
+                            （本规则可选，没必要每份代码都描述的很充分，它会增重HTML和CSS的代码。这取决于该项目的复杂程度。）
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Action_items" name="Action_items">活动的条目</a></h3>
+                <span name="link-Action_items__button" id="link-Action_items__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Action_items#Action_items"> 原文</a></span>
+                <span id="Action_items__button" name="Action_items__button" onclick="javascript:ShowHideByName('Action_items')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    用
+                    <code>
+                        TODO
+                    </code>标记代办事项和正活动的条目
+                </div>
+                <div class="">
+                    <div style="display: none" id="Action_items__body" name="Action_items__body" class="stylepoint_body">
+                        <p>
+                            只用
+                            <code>
+                                TODO
+                            </code>
+                            来强调代办事项， 
+                            不要用其他的常见格式，例如 
+                            <code>
+                                @@
+                            </code>。
+                        </p>
+                        <p>
+                            附加联系人（用户名或电子邮件列表），用括号括起来，例如
+                            <code>
+                                TODO(contact)
+                            </code>。
+                        </p>
+                        <p>
+                            可在冒号之后附加活动条目说明等，例如
+                            <code>
+                                TODO: 活动条目说明
+                            </code>。
+                        </p>
+                        <div class="">
+                            <pre>{# TODO(cha.jn): 重新置中 #}
+&lt;center&gt;Test&lt;/center&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- TODO: 删除可选元素 --&gt;
+&lt;ul&gt;
+  &lt;li&gt;Apples&lt;/li&gt;
+  &lt;li&gt;Oranges&lt;/li&gt;
+&lt;/ul&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="">
+            <h2 id="HTML_Style_Rules" name="HTML_Style_Rules">HTML代码风格规则</h2>
+            <div class="">
+                <h3><a id="Document_type" name="Document_type">文档类型</a></h3>
+                <span name="link-Document_type__button" id="link-Document_type__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Document_type#Document_type"> 原文</a></span>
+                <span id="Document_type__button" name="Document_type__button" onclick="javascript:ShowHideByName('Document_type')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                   请使用HTML5标准。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Document_type__body" name="Document_type__body" class="stylepoint_body">
+                        <p>
+                            HTML5是目前所有HTML文档类型中的首选：
+                            <code>
+                                &lt;!DOCTYPE html&gt;
+                            </code>.
+                        </p>
+                        <p>
+                            （推荐用HTML文本文档格式，即 
+                            <code>
+                                text/html
+                            </code>. 不要用 
+                            XHTML。 XHTML格式，即 <a href="http://hixie.ch/advocacy/xhtml">
+                                <code>
+                                    application/xhtml+xml
+                                </code>
+                            </a>,
+                            有俩浏览器完全不支持，还比HTML用更多的存储空间。）
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="HTML_validity" name="HTML_validity">HTML代码有效性</a></h3>
+                <span name="link-HTML_validity__button" id="link-HTML_validity__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=HTML_validity#HTML_validity"> 原文</a></span>
+                <span id="HTML_validity__button" name="HTML_validity__button" onclick="javascript:ShowHideByName('HTML_validity')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    尽量使用有效的HTML代码。
+                </div>
+                <div class="">
+                    <div style="display: none" id="HTML_validity__body" name="HTML_validity__body" class="stylepoint_body">
+                        <p>
+                            编写有效的HTML代码，否则很难达到性能上的提升。
+                        </p>
+                        <p>
+                            用类似这样的工具 <a href="http://validator.w3.org/">W3C
+                                HTML validator</a>
+                            来进行测试。
+                        </p>
+                        <p>
+                            HTML代码有效性是重要的质量衡量标准，并可确保HTML代码可以正确使用。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;title&gt;Test&lt;/title&gt;
+&lt;article&gt;This is only a test.</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;title&gt;Test&lt;/title&gt;
+&lt;article&gt;This is only a test.&lt;/article&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Semantics" name="Semantics">语义</a></h3>
+                <span name="link-Semantics__button" id="link-Semantics__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Semantics#Semantics"> 原文</a></span>
+                <span id="Semantics__button" name="Semantics__button" onclick="javascript:ShowHideByName('Semantics')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    根据HTML各个元素的用途而去使用它们。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Semantics__body" name="Semantics__body" class="stylepoint_body">
+                        <p>
+                            使用元素 (有时候错称其为“标签”) 要知道为什么去使用它们和是否正确。 例如，用heading元素构造标题，
+                            <code>
+                                p
+                            </code>
+                            元素构造段落, 
+                            <code>
+                                a
+                            </code>
+                            元素构造锚点等。
+                        </p>
+                        <p>
+                            根据HTML各个元素的用途而去使用是很重要的，它涉及到文档的可访问性、重用和代码效率等问题。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;div onclick="goToRecommendations();"&gt;All recommendations&lt;/div&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;a href="recommendations/"&gt;All recommendations&lt;/a&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Multimedia_fallback" name="Multimedia_fallback">多媒体后备方案</a></h3>
+                <span name="link-Multimedia_fallback__button" id="link-Multimedia_fallback__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Multimedia_fallback#Multimedia_fallback"> 原文</a></span>
+                <span id="Multimedia_fallback__button" name="Multimedia_fallback__button" onclick="javascript:ShowHideByName('Multimedia_fallback')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    为多媒体提供备选内容。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Multimedia_fallback__body" name="Multimedia_fallback__body" class="stylepoint_body">
+                        <p>
+                            对于多媒体，如图像，视频，通过
+                            <code>
+                                canvas
+                            </code>读取的动画元素，确保提供备选方案。 对于图像使用有意义的备选文案（
+                            <code>
+                                alt
+                            </code>） 对于视频和音频使用有效的副本和文案说明。
+                        </p>
+                        <p>
+                            提供备选内容是很重要的，原因：给盲人用户以一些提示性的文字，用
+                            <code>
+                                @alt
+                            </code>告诉他这图像是关于什么的，给可能没理解视频或音频的内容的用户以提示。
+                        </p>
+                        <p>
+                            （图像的
+                            <code>
+                                alt
+                            </code>
+                            属性会产生冗余，如果使用图像只是为了不能立即用CSS而装饰的 ，就不需要用备选文案了，可以写
+                            <code>
+                                alt=""
+                            </code>。）
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;img src="spreadsheet.png"&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;img src="spreadsheet.png" alt="电子表格截图"&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Separation_of_concerns" name="Separation_of_concerns">关注点分离</a></h3>
+                <span name="link-Separation_of_concerns__button" id="link-Separation_of_concerns__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Separation_of_concerns#Separation_of_concerns"> 原文</a></span>
+                <span id="Separation_of_concerns__button" name="Separation_of_concerns__button" onclick="javascript:ShowHideByName('Separation_of_concerns')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    将表现和行为分开。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Separation_of_concerns__body" name="Separation_of_concerns__body" class="stylepoint_body">
+                        <p>
+                            严格保持结构 （标记），表现 （样式），和行为 （脚本）分离, 并尽量让这三者之间的交互保持最低限度。
+                        </p>
+                        <p>
+                            确保文档和模板只包含HTML结构， 把所有表现都放到样式表里，把所有行为都放到脚本里。
+                        </p>
+                        <p>
+                            此外，尽量使脚本和样式表在文档与模板中有最小接触面积，即减少外链。
+                        </p>
+                        <p>
+                            将表现和行为分开维护是很重要滴，因为更改HTML文档结构和模板会比更新样式表和脚本更花费成本。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;title&gt;HTML sucks&lt;/title&gt;
+&lt;link rel="stylesheet" href="base.css" media="screen"&gt;
+&lt;link rel="stylesheet" href="grid.css" media="screen"&gt;
+&lt;link rel="stylesheet" href="print.css" media="print"&gt;
+&lt;h1 style="font-size: 1em;"&gt;HTML sucks&lt;/h1&gt;
+&lt;p&gt;I’ve read about this on a few sites but now I’m sure:
+  &lt;u&gt;HTML is stupid!!1&lt;/u&gt;
+&lt;center&gt;I can’t believe there’s no way to control the styling of
+  my website without doing everything all over again!&lt;/center&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;title&gt;My first CSS-only redesign&lt;/title&gt;
+&lt;link rel="stylesheet" href="default.css"&gt;
+&lt;h1&gt;My first CSS-only redesign&lt;/h1&gt;
+&lt;p&gt;I’ve read about this on a few sites but today I’m actually
+  doing it: separating concerns and avoiding anything in the HTML of
+  my website that is presentational.
+&lt;p&gt;It’s awesome!</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Entity_references" name="Entity_references">实体引用</a></h3>
+                <span name="link-Entity_references__button" id="link-Entity_references__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Entity_references#Entity_references"> 原文</a></span>
+                <span id="Entity_references__button" name="Entity_references__button" onclick="javascript:ShowHideByName('Entity_references')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    不要用实体引用。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Entity_references__body" name="Entity_references__body" class="stylepoint_body">
+                        <p>
+                            不需要使用类似
+                            <code>
+                                &amp;mdash;
+                            </code>、
+                            <code>
+                                &amp;rdquo;
+                            </code>和
+                            <code>
+                                &amp;#x263a;
+                            </code>等的实体引用, 假定团队之间所用的文件和编辑器是同一编码（UTF-8）。
+                        </p>
+                        <p>
+                            在HTML文档中具有特殊含义的字符（例如 
+                            <code>
+                                &lt;
+                            </code>
+                            和
+                            <code>
+                                &amp;
+                            </code>)为例外， 噢对了，还有 “不可见” 字符 （例如no-break空格）。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+欧元货币符号是 &amp;ldquo;&amp;eur;&amp;rdquo;。</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+欧元货币符号是 “€”。</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Optional_tags" name="Optional_tags">可选标签</a></h3>
+                <span name="link-Optional_tags__button" id="link-Optional_tags__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Optional_tags#Optional_tags"> 原文</a></span>
+                <span id="Optional_tags__button" name="Optional_tags__button" onclick="javascript:ShowHideByName('Optional_tags')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    省略可选标签（可选）。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Optional_tags__body" name="Optional_tags__body" class="stylepoint_body">
+                        <p>
+                            出于优化文件大小和校验， 可以考虑省略可选标签，哪些是可选标签可以参考 <a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/syntax.html#syntax-tag-omission">HTML5
+                                specification</a>。
+                        </p>
+                        <p>
+                          （这种方法可能需要更精准的规范来制定，众多的开发者对此的观点也都不同。考虑到一致性和简洁的原因，省略所有可选标记是有必要的。）
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Spending money, spending bytes&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;Sic.&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;title&gt;Saving money, saving bytes&lt;/title&gt;
+&lt;p&gt;Qed.</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="type_attributes" name="type_attributes">type属性</a></h3>
+                <span name="link-type_attributes__button" id="link-type_attributes__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=type_attributes#type_attributes"> 原文</a></span>
+                <span id="type_attributes__button" name="type_attributes__button" onclick="javascript:ShowHideByName('type_attributes')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    在样式表和脚本的标签中忽略
+                    <code>
+                        type
+                    </code>
+                    属性 
+                </div>
+                <div class="">
+                    <div style="display: none" id="type_attributes__body" name="type_attributes__body" class="stylepoint_body">
+                        <p>
+                           在样式表（除非不用 CSS）和脚本（除非不用 JavaScript）的标签中 不写
+                            <code>
+                                type
+                            </code>
+                            属性。
+                        </p>
+                        <p>
+                          HTML5默认
+                            <code>
+                                type
+                            </code>
+                            为<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/semantics.html#attr-style-type">
+                                <code>
+                                    text/css
+                                </code>
+                            </a>
+                            和<a href="http://www.whatwg.org/specs/web-apps/current-work/multipage/scripting-1.html#attr-script-type">
+                                <code>
+                                    text/javascript
+                                </code>
+                            </a>
+							类型，所以没必要指定。即便是老浏览器也是支持的。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;link rel="stylesheet" href="//www.google.com/css/maia.css"
+  type="text/css"&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;link rel="stylesheet" href="//www.google.com/css/maia.css"&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre class="badcode">&lt;!-- 不推荐 --&gt;
+&lt;script src="//www.google.com/js/gweb/analytics/autotrack.js"
+  type="text/javascript"&gt;&lt;/script&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;!-- 推荐 --&gt;
+&lt;script src="//www.google.com/js/gweb/analytics/autotrack.js"&gt;&lt;/script&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="">
+            <h2 id="HTML_Formatting_Rules" name="HTML_Formatting_Rules">HTML代码格式规则</h2>
+            <div class="">
+                <h3><a id="General_formatting" name="General_formatting">格式</a></h3>
+                <span name="link-General_formatting__button" id="link-General_formatting__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=General_formatting#General_formatting"> 原文</a></span>
+                <span id="General_formatting__button" name="General_formatting__button" onclick="javascript:ShowHideByName('General_formatting')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    每个块元素、列表元素或表格元素都独占一行，每个子元素都相对于父元素进行缩进。
+                </div>
+                <div class="">
+                    <div style="display: none" id="General_formatting__body" name="General_formatting__body" class="stylepoint_body">
+                        <p>
+                           独立元素的样式（as CSS allows elements to assume a different role per
+                           <code>
+                                display
+                            </code>
+                            property), 将块元素、列表元素或表格元素都放在新行。
+                        </p>
+                        <p>
+                            另外，需要缩进块元素、列表元素或表格元素的子元素。
+                        </p>
+                        <p>
+                            （如果出现了列表项左右空文本节点问题，可以试着将所有的
+                            <code>
+                                li
+                            </code>
+                            元素都放在一行。 A linter is encouraged to throw a warning instead of
+                            an error.)
+                        </p>
+                        <div class="">
+                            <pre>&lt;blockquote&gt;
+  &lt;p&gt;&lt;em&gt;Space&lt;/em&gt;, the final frontier.&lt;/p&gt;
+&lt;/blockquote&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;ul&gt;
+  &lt;li&gt;Moe
+  &lt;li&gt;Larry
+  &lt;li&gt;Curly
+&lt;/ul&gt;</pre>
+                        </div>
+                        <div class="">
+                            <pre>&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col"&gt;Income
+      &lt;th scope="col"&gt;Taxes
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;$ 5.00
+      &lt;td&gt;$ 4.50
+&lt;/table&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="">
+            <h2 id="CSS_Style_Rules" name="CSS_Style_Rules">CSS代码风格规则</h2>
+            <div class="">
+                <h3><a id="CSS_validity" name="CSS_validity">CSS代码有效性</a></h3>
+                <span name="link-CSS_validity__button" id="link-CSS_validity__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=CSS_validity#CSS_validity"> 原文</a></span>
+                <span id="CSS_validity__button" name="CSS_validity__button" onclick="javascript:ShowHideByName('CSS_validity')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    尽量使用有效的CSS代码。
+                </div>
+                <div class="">
+                    <div style="display: none" id="CSS_validity__body" name="CSS_validity__body" class="stylepoint_body">
+                        <p>
+                            使用有效的CSS代码，除非是处理CSS校验器程序错误或者需要专有语法。
+                        </p>
+                        <p>
+                            用类似<a href="http://jigsaw.w3.org/css-validator/">W3C CSS validator</a>
+                            这样的工具来进行有效性的测试。
+                        </p>
+                        <p>
+                            使用有效的CSS是重要的质量衡量标准，如果发现有的CSS代码没有任何效果的可以删除，确保CSS用法适当。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="ID_and_class_naming" name="ID_and_class_naming">ID和class的命名</a></h3>
+                <span name="link-ID_and_class_naming__button" id="link-ID_and_class_naming__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=ID_and_class_naming#ID_and_class_naming"> 原文</a></span>
+                <span id="ID_and_class_naming__button" name="ID_and_class_naming__button" onclick="javascript:ShowHideByName('ID_and_class_naming')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    为ID和class取通用且有意义的名字。
+                </div>
+                <div class="">
+                    <div style="display: none" id="ID_and_class_naming__body" name="ID_and_class_naming__body" class="stylepoint_body">
+                        <p>
+                            应该从ID和class的名字上就能看出这元素是干嘛用的，而不是表象或模糊不清的命名。
+                        </p>
+                        <p>
+                            应该优先虑以这元素具体目来进行命名，这样他就最容易理解，减少更新。
+                        </p>
+                        <p>
+                            通用名称可以加在兄弟元素都不特殊或没有个别意义的元素上，可以起名类似“helpers”这样的泛。
+                        </p>
+                        <p>
+                            使用功能性或通用的名字会减少不必要的文档或模板修改。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐: 无意义 不易理解 */
+#yee-1901 {}
+
+/* 不推荐: 表达不具体 */
+.button-green {}
+.clear {}</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐: 明确详细 */
+#gallery {}
+#login {}
+.video {}
+
+/* 推荐: 通用 */
+.aux {}
+.alt {}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="ID_and_class_name_style" name="ID_and_class_name_style">ID和class命名风格</a></h3>
+                <span name="link-ID_and_class_name_style__button" id="link-ID_and_class_name_style__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=ID_and_class_name_style#ID_and_class_name_style"> 原文</a></span>
+                <span id="ID_and_class_name_style__button" name="ID_and_class_name_style__button" onclick="javascript:ShowHideByName('ID_and_class_name_style')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                  非必要的情况下，ID和class的名称应尽量简短。
+                </div>
+                <div class="">
+                    <div style="display: none" id="ID_and_class_name_style__body" name="ID_and_class_name_style__body" class="stylepoint_body">
+                        <p>
+                            简要传达ID或class是关于什么的。
+                        </p>
+                        <p>
+                            通过这种方式，似的代码易懂且高效。
+                        </p>
+
+                        <div class="">
+                            <pre class="badcode">/* 不推荐 */
+#navigation {}
+.atr {}</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+#nav {}
+.author {}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Type_selectors" name="Type_selectors">类型选择器</a></h3>
+                <span name="link-Type_selectors__button" id="link-Type_selectors__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Type_selectors#Type_selectors"> 原文</a></span>
+                <span id="Type_selectors__button" name="Type_selectors__button" onclick="javascript:ShowHideByName('Type_selectors')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    避免使用CSS类型选择器。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Type_selectors__body" name="Type_selectors__body" class="stylepoint_body">
+                        <p>
+                            非必要的情况下不要使用元素标签名和ID或class进行组合。
+                        </p>
+                        <p>
+                            出于性能上的考虑避免使用父辈节点做选择器 <a href="http://www.stevesouders.com/blog/2009/06/18/simplifying-css-selectors/">performance
+                                reasons</a>.
+                        </p>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐 */
+ul#example {}
+div.error {}</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+#example {}
+.error {}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Shorthand_properties" name="Shorthand_properties">属性缩写</a></h3>
+                <span name="link-Shorthand_properties__button" id="link-Shorthand_properties__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Shorthand_properties#Shorthand_properties"> 原文</a></span>
+                <span id="Shorthand_properties__button" name="Shorthand_properties__button" onclick="javascript:ShowHideByName('Shorthand_properties')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    写属性值的时候尽量使用缩写。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Shorthand_properties__body" name="Shorthand_properties__body" class="stylepoint_body">
+                        <p>
+                            CSS很多属性都支持缩写<a href="http://www.w3.org/TR/CSS21/about.html#shorthand">shorthand</a>
+                            （例如
+                            <code>
+                                font
+                            </code>）
+                            尽量使用缩写，甚至只设置一个值。
+                        </p>
+                        <p>
+                            使用缩写可以提高代码的效率和方便理解。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐 */
+border-top-style: none;
+font-family: palatino, georgia, serif;
+font-size: 100%;
+line-height: 1.6;
+padding-bottom: 2em;
+padding-left: 1em;
+padding-right: 1em;
+padding-top: 0;</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+border-top: 0;
+font: 100%/1.6 palatino, georgia, serif;
+padding: 0 1em 2em;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="0_and_units" name="0_and_units">0和单位</a></h3>
+                <span name="link-0_and_units__button" id="link-0_and_units__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=0_and_units#0_and_units"> 原文</a></span>
+                <span id="0_and_units__button" name="0_and_units__button" onclick="javascript:ShowHideByName('0_and_units')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    省略0后面的单位。
+                </div>
+                <div class="">
+                    <div style="display: none" id="0_and_units__body" name="0_and_units__body" class="stylepoint_body">
+                        <p>
+                            非必要的情况下
+                            <code>
+                                0
+                            </code>
+                            后面不用加单位。
+                        </p>
+                        <div class="">
+                            <pre>margin: 0;
+padding: 0;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Leading_0s" name="Leading_0s">0开头的小数</a></h3>
+                <span name="link-Leading_0s__button" id="link-Leading_0s__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Leading_0s#Leading_0s"> 原文</a></span>
+                <span id="Leading_0s__button" name="Leading_0s__button" onclick="javascript:ShowHideByName('Leading_0s')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    省略0开头小数点前面的0。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Leading_0s__body" name="Leading_0s__body" class="stylepoint_body">
+                        <p>
+                           值或长度在-1与1之间的小数，小数前的
+                            <code>
+                                0
+                            </code>可以忽略不写。
+                        </p>
+                        <div class="">
+                            <pre>font-size: .8em;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Quotation_marks_in_URI_values" name="Quotation_marks_in_URI_values">URI外的引号</a></h3>
+                <span name="link-Quotation_marks_in_URI_values__button" id="link-Quotation_marks_in_URI_values__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Quotation_marks_in_URI_values#Quotation_marks_in_URI_values"> 原文</a></span>
+                <span id="Quotation_marks_in_URI_values__button" name="Quotation_marks_in_URI_values__button" onclick="javascript:ShowHideByName('Quotation_marks_in_URI_values')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    省略URI外的引号。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Quotation_marks_in_URI_values__body" name="Quotation_marks_in_URI_values__body" class="stylepoint_body">
+                        <p>
+                            不要在
+                            <code>
+                                url()
+                            </code>
+                            里用 (
+                            <code>
+                                ""
+                            </code>,
+                            <code>
+                                ''
+                            </code>) 。 
+                        </p>
+                        <div class="">
+                            <pre>@import url(//www.google.com/css/go.css);</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Hexadecimal_notation" name="Hexadecimal_notation">十六进制</a></h3>
+                <span name="link-Hexadecimal_notation__button" id="link-Hexadecimal_notation__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Hexadecimal_notation#Hexadecimal_notation"> 原文</a></span>
+                <span id="Hexadecimal_notation__button" name="Hexadecimal_notation__button" onclick="javascript:ShowHideByName('Hexadecimal_notation')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    十六进制尽可能使用3个字符。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Hexadecimal_notation__body" name="Hexadecimal_notation__body" class="stylepoint_body">
+                        <p>
+                            加颜色值时候会用到它，使用3个字符的十六进制更短与简洁。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐 */
+color: #eebbcc;</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+color: #ebc;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Prefixes" name="Prefixes">前缀</a></h3>
+                <span name="link-Prefixes__button" id="link-Prefixes__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Prefixes#Prefixes"> 原文</a></span>
+                <span id="Prefixes__button" name="Prefixes__button" onclick="javascript:ShowHideByName('Prefixes')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    选择器前面加上特殊应用标识的前缀（可选）。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Prefixes__body" name="Prefixes__body" class="stylepoint_body">
+                        <p>
+                            大型项目中最好在ID或class名字前加上这种标识性前缀（命名空间），使用短破折号链接。
+                        </p>
+                        <p>
+                            使用命名空间可以防止命名冲突，方便维护，比如在搜索和替换操作上。
+                        </p>
+                        <div class="">
+                            <pre>.adw-help {} /* AdWords */
+#maia-note {} /* Maia */</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="ID_and_class_name_delimiters" name="ID_and_class_name_delimiters">ID和class命名的定界符</a></h3>
+                <span name="link-ID_and_class_name_delimiters__button" id="link-ID_and_class_name_delimiters__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=ID_and_class_name_delimiters#ID_and_class_name_delimiters"> 原文</a></span>
+                <span id="ID_and_class_name_delimiters__button" name="ID_and_class_name_delimiters__button" onclick="javascript:ShowHideByName('ID_and_class_name_delimiters')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    ID和class名字有多单词组合的用短破折号“-”分开。
+                </div>
+                <div class="">
+                    <div style="display: none" id="ID_and_class_name_delimiters__body" name="ID_and_class_name_delimiters__body" class="stylepoint_body">
+                        <p>
+                            别在选择器名字里用短破折号“-”以外的连接词(包括啥也没有)，
+                            以增进对名字的理解和查找。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐：“demo”和“image”中间没加“-” */
+.demoimage {}
+
+/* 不推荐：用下划线“_”是屌丝的风格 */
+.error_status {}</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+#video-id {}
+.ads-sample {}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Hacks" name="Hacks">Hacks</a></h3>
+                <span name="link-Hacks__button" id="link-Hacks__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Hacks#Hacks"> 原文</a></span>
+                <span id="Hacks__button" name="Hacks__button" onclick="javascript:ShowHideByName('Hacks')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    最好避免使用该死的CSS “hacks” —— 请先尝试使用其他的解决方法。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Hacks__body" name="Hacks__body" class="stylepoint_body">
+                        <p>
+                            虽然它很有诱惑力，可以当作用户代理检测或特殊的CSS过滤器，但它的行为太过于频繁，会长期伤害项目的效率和代码管理，所以能用其他的解决方案就找其他的。
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="">
+            <h2 id="CSS_Formatting_Rules" name="CSS_Formatting_Rules">CSS代码格式规则</h2>
+            <div class="">
+                <h3><a id="Declaration_order" name="Declaration_order">声明顺序</a></h3>
+                <span name="link-Declaration_order__button" id="link-Declaration_order__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Declaration_order#Declaration_order"> 原文</a></span>
+                <span id="Declaration_order__button" name="Declaration_order__button" onclick="javascript:ShowHideByName('Declaration_order')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    依字母顺序进行声明。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Declaration_order__body" name="Declaration_order__body" class="stylepoint_body">
+                        <p>
+                            都按字母顺序声明，很容易记住和维护。
+                        </p>
+                        <p>
+                            忽略浏览器的特定前缀排序，但多浏览器特定的某个CSS属性前缀应相对保持排序（例如-moz前缀在-webkit前面）。
+                        </p>
+                        <div class="">
+                            <pre>background: fuchsia;
+border: 1px solid;
+-moz-border-radius: 4px;
+-webkit-border-radius: 4px;
+border-radius: 4px;
+color: black;
+text-align: center;
+text-indent: 2em;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Block_content_indentation" name="Block_content_indentation">代码块内容缩进</a></h3>
+                <span name="link-Block_content_indentation__button" id="link-Block_content_indentation__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Block_content_indentation#Block_content_indentation"> 原文</a></span>
+                <span id="Block_content_indentation__button" name="Block_content_indentation__button" onclick="javascript:ShowHideByName('Block_content_indentation')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    缩进所有代码块（“{}”之间）内容。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Block_content_indentation__body" name="Block_content_indentation__body" class="stylepoint_body">
+                        <p>
+                          缩进所有<a href="http://www.w3.org/TR/CSS21/syndata.html#block">代码块</a>的内容，它能够提高层次结构的清晰度。
+                        </p>
+                        <div class="">
+                            <pre>@media screen, projection {
+
+  html {
+    background: #fff;
+    color: #444;
+  }
+
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Declaration_stops" name="Declaration_stops">声明完结</a></h3>
+                <span name="link-Declaration_stops__button" id="link-Declaration_stops__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Declaration_stops#Declaration_stops"> 原文</a></span>
+                <span id="Declaration_stops__button" name="Declaration_stops__button" onclick="javascript:ShowHideByName('Declaration_stops')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    所有声明都要用“;”结尾。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Declaration_stops__body" name="Declaration_stops__body" class="stylepoint_body">
+                        <p>
+                          考虑到一致性和拓展性，请在每个声明尾部都加上分号。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐 */
+.test {
+  display: block;
+  height: 100px
+}</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+.test {
+  display: block;
+  height: 100px;
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Property_name_stops" name="Property_name_stops">属性名完结</a></h3>
+                <span name="link-Property_name_stops__button" id="link-Property_name_stops__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Property_name_stops#Property_name_stops"> 原文</a></span>
+                <span id="Property_name_stops__button" name="Property_name_stops__button" onclick="javascript:ShowHideByName('Property_name_stops')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    在属性名冒号结束后加一个空字符。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Property_name_stops__body" name="Property_name_stops__body" class="stylepoint_body">
+                        <p>
+                            出于一致性的原因，在属性名和值之间加一个空格（可不是属性名和冒号之间噢）。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐 */
+h3 {
+  font-weight:bold;
+}</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+h3 {
+  font-weight: bold;
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Selector_and_declaration_separation" name="Selector_and_declaration_separation">选择器和声明分行</a></h3>
+                <span name="link-Selector_and_declaration_separation__button" id="link-Selector_and_declaration_separation__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Selector_and_declaration_separation#Selector_and_declaration_separation"> 原文</a></span>
+                <span id="Selector_and_declaration_separation__button" name="Selector_and_declaration_separation__button" onclick="javascript:ShowHideByName('Selector_and_declaration_separation')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    将选择器和声明隔行。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Selector_and_declaration_separation__body" name="Selector_and_declaration_separation__body" class="stylepoint_body">
+                        <p>
+                            每个选择器和声明都要独立新行。
+                        </p>
+                        <div class="">
+                            <pre class="badcode">/* 不推荐 */
+a:focus, a:active {
+  position: relative; top: 1px;
+}</pre>
+                        </div>
+                        <div class="">
+                            <pre>/* 推荐 */
+h1,
+h2,
+h3 {
+  font-weight: normal;
+  line-height: 1.2;
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="">
+                <h3><a id="Rule_separation" name="Rule_separation">规则分行</a></h3>
+                <span name="link-Rule_separation__button" id="link-Rule_separation__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Rule_separation#Rule_separation"> 原文</a></span>
+                <span id="Rule_separation__button" name="Rule_separation__button" onclick="javascript:ShowHideByName('Rule_separation')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    每个规则独立一行。
+                </div>
+                <div class="">
+                    <div style="display: none" id="Rule_separation__body" name="Rule_separation__body" class="stylepoint_body">
+                        <p>
+                            两个规则之间隔行。
+                        </p>
+                        <div class="">
+                            <pre>html {
+  background: #fff;
+}
+
+body {
+  margin: auto;
+  width: 50%;
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="">
+            <h2 id="CSS_Meta_Rules" name="CSS_Meta_Rules">CSS元数据规则</h2>
+            <div class="">
+                <h3><a id="Section_comments" name="Section_comments">注释部分</a></h3>
+                <span name="link-Section_comments__button" id="link-Section_comments__button" class="link_button"><a href="http://google-styleguide.googlecode.com/svn/trunk/htmlcssguide.xml?showone=Section_comments#Section_comments"> 原文</a></span>
+                <span id="Section_comments__button" name="Section_comments__button" onclick="javascript:ShowHideByName('Section_comments')" class="showhide_button">▶</span>
+                <div class="" style="display:inline;">
+                    按组写注释。（可选）
+                </div>
+                <div class="">
+                    <div style="display: none" id="Section_comments__body" name="Section_comments__body" class="stylepoint_body">
+                        <p>
+                            如果可以，按照功能的类别来对一组样式表写统一注释。独立成行。
+                        </p>
+                        <div class="">
+                            <pre>/* Header */
+
+#adw-header {}
+
+/* Footer */
+
+#adw-footer {}
+
+/* Gallery */
+
+.adw-gallery {}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h2>吐槽部分</h2>
+        <p>
+            <em>坚持一致原则</em>
+        </p>
+        <p>
+            如果你要编辑代码，先花几分钟看看它的代码风格，如果它这么做，那你也应该这么做。
+        </p>
+        <p>
+            风格统一了，就有了一个共同思维的环境，参与者就可以专注的看你要说什么，而不是先想你是在说哪星球的语言。
+            虽然我们在这里提出统一样式规则，但就只是想让大家都知晓并借鉴而对自己的风格进行修正。
+            当然，保持自己独有的风格也是很重要的。balabala……
+        </p>
+        <p align="right">
+            修正版本 2.1
+        </p>
+        <p align="right">
+            译者：chajn
+        </p>
+        <p align="right">
+            新浪微博：<a target="_blank" href="http://weibo.com/chajn">@chajn</a>
+        </p>
+        <p align="right">
+            于 2012-04-28
+        </p>
+        <p align="right">
+            那暗淡的夜晚
+        </p>
+        
+    </body>
+</html>

@@ -1,0 +1,371 @@
+<html class=" js svg inlinesvg svgclippaths js svg inlinesvg svgclippaths js svg inlinesvg svgclippaths" lang="en-US"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>你若触发，我就处理——浅谈JavaScript的事件响应</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta charset="UTF-8">
+<link rel="stylesheet" id="main-css" href="style.css" type="text/css" media="all">
+
+</head>
+<body class="single single-post postid-121533 single-format-standard coding-section">
+
+  
+        
+
+<div id="container">
+    <div class="fluid clearfix" style="
+    margin-right: 0;
+">
+        <div class="grid clearfix">
+            
+            
+        <div class="col main single" style="
+    width: 100%;
+    float: none;
+">
+    <article class="post-121533 post type-post status-publish format-standard hentry category-coding tag-code tag-css tag-javascript post">
+                    <h2><a href="#" rel="bookmark" title="Read 'JavaScript Events And Responding To The User'"><span class="headline">你若触发，我就处理——浅谈JavaScript的事件响应</span></a></h2>
+                <ul class="postmetadata clearfix">
+            <li class="author">来自<a rel="author" href="http://coding.smashingmagazine.com/author/christian-heilmann/?rel=author" title="Posts by Christian Heilmann">高举神圣火把的FFF团忠诚教徒·海尔曼</a><sup class="print_only"> 1</sup><sup class="print_only"> 1</sup><sup class="print_only"> 1</sup></li>
+            <li id="logoedtarget" class="inline"></li>            <li class="date">2012年8月17号</li>
+            <li class="tags">=。=竟然在翻译去年的文章，下次应该看好日期的</li>
+            <li class="comments">不要在意细节，乐呵乐呵就好啦</li>
+                    </ul>
+                
+                                    <p>每当猴子们问我JavaScript和DOM里啥东西最牛逼时，我都会一巴掌打回去：卧槽还用问么当然是事件响应了啊！没它你能有时间和我讨论这个？你早去工地搬砖去了好么！浏览器没有事件响应就没有行为交互，那简直就是一夜回到解放前的感觉啊。此外，以事件驱动使得功能解耦也是个相当高端大气的技巧了，嘛，以此为主的<a href="http://nodejs.org/">Node.js</a> 现在可是风生水起的说。</p>
+<p>那现在我们就再抠抠事件监听的相关基础，让大家在心情愉悦的状态下获得更多的姿♂势。不过那些经常写<code>&lt;a href="javascript:void(0)"&gt;</code>和在标签上写<code>onclick="foo()"</code>的猴子们请自动回避，小心你看不懂又想不开，老衲徒增罪孽呀（偶八年前就解释了<a href="http://www.onlinetools.org/articles/unobtrusivejavascript/chapter4.html">内联事件处理是自寻死路</a>）。</p>
+<p>再唠叨两句：本文的代码内容只涉及到原生JavaScript，像JQuery，YUI或Dojo什么的所提供的事件处理这里就不加以赘述了。我希望大家能够明白，使用这些库只是为了方便，但我们却不能完全依赖它。了解基础与理解本质是非常重要的，这样你就可以在不能使用傻瓜库的情况下，依旧可以提供一个牛逼的解决方案。</p>
+<p><strong>进化主义声明</strong>：这里我们使用的事件语法是“<a href="http://dev.w3.org/2006/webapi/DOM-Level-3-Events/html/DOM3-Events.html#events-EventTarget-addEventListener">DOM Level 3 Events</a>”规范定义的“<a href="https://developer.mozilla.org/en/DOM/element.addEventListener">addEventListener()</a>。除了IE9以下版本以外的现代浏览器都支持。当然，我们可以使用JQuery，它会帮我解决这些浏览器兼容性的问题。但如果你还想让互联网可以良好发展和进化，你就应该立刻停止为兼容低级浏览器而再去写一坨屎一样的傻逼兼容代码。这条路虽然艰辛，但却无比正确。可以试着给你的产品进行功能降级，检测到是低级浏览器就不执行脚本，比如<code>addEventListener()</code>的<code>DOMContentLoaded</code>事件就能确保你的代码不在低级浏览器中运行，而页面可以将主体内容正常显示就OK的。</p>
+<p>在我们进入事件的细节之前先看几个牛逼的演示，它利用onscroll事件得到了一个很nice的效果：</p>
+<ul>
+<li>因为要招设计师，Wealthfront的工程师们开发了<a href="https://www.wealthfront.com/designerwanted">Z轴滚动平移效果</a><sup class="print_only"> 6</sup><sup class="print_only"> 6</sup><sup class="print_only"> 5</sup>。这也是<a href="http://2011.beercamp.com/">Beercamp 2011 website</a><sup class="print_only"> 7</sup><sup class="print_only"> 7</sup><sup class="print_only"> 6</sup>的一部分。Wealthfront的<a href="http://eng.wealthfront.com/2012/03/scrolling-z-axis-with-css-3d-transforms.html">博客</a><sup class="print_only"> 8</sup><sup class="print_only"> 8</sup><sup class="print_only"> 7</sup>有细节介绍。</li>
+<li><a href="http://lab.hakim.se/scroll-effects/">Stroll.js</a><sup class="print_only"> 9</sup><sup class="print_only"> 9</sup><sup class="print_only"> 8</sup>用的也是类似的手法，用户可以在滚动列表时看到很多种炫酷展现。</li>
+<li><a href="http://joelb.me/scrollpath/">jQuery Scroll Path</a><sup class="print_only"> 10</sup><sup class="print_only"> 10</sup><sup class="print_only"> 9</sup>是一个JQ插件，它的功能是当用户在页面内能够跟随着一条路径去动态浏览内容。</li>
+</ul>
+<p>以上所有都是基于浏览器的事件监听和处理功能，所以，让我们细细品味一下原汁原味的事件机制吧。</p>
+<h3>基础问题：啥是事件？</h3>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> log <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">getElementById<span class="token punctuation">(</span></span><span class="token string">'log'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    i <span class="token operator">=</span> <span class="token string">''</span><span class="token punctuation">,</span> 
+    out <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token keyword">in</span> window<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span> <span class="token regex">/^on/</span><span class="token punctuation">.</span><span class="token function">test<span class="token punctuation">(</span></span>i<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> out<span class="token punctuation">[</span>out<span class="token punctuation">.</span>length<span class="token punctuation">]</span> <span class="token operator">=</span> i<span class="token punctuation">;</span> <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+log<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> out<span class="token punctuation">.</span><span class="token function">join<span class="token punctuation">(</span></span><span class="token string">', '</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>在浏览器中运行如上代码，亲们可以得到如下：</p>
+<p>onmouseenter, onmouseleave, onafterprint, onbeforeprint, onbeforeunload, onhashchange, onmessage, onoffline, ononline, onpopstate, onpagehide, onpageshow, onresize, onunload, ondevicemotion, ondeviceorientation, onabort, onblur, oncanplay, oncanplaythrough, onchange, onclick, oncontextmenu, ondblclick, ondrag, ondragend, ondragenter, ondragleave, ondragover, ondragstart, ondrop, ondurationchange, onemptied, onended, onerror, onfocus, oninput, oninvalid, onkeydown, onkeypress, onkeyup, onload, onloadeddata, onloadedmetadata, onloadstart, onmousedown, onmousemove, onmouseout, onmouseover, onmouseup, onmozfullscreenchange, onmozfullscreenerror, onpause, onplay, onplaying, onprogress, onratechange, onreset, onscroll, onseeked, onseeking, onselect, onshow, onstalled, onsubmit, onsuspend, ontimeupdate, onvolumechange, onwaiting, oncopy, oncut, onpaste, onbeforescriptexecute, onafterscriptexecute</p>
+<p>一大坨事件就够你吃几天的了，用<code>addEventListener()</code>方法可以进行事件监听：</p>
+<pre class="  language-javascript"><code class="  language-javascript">element<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span>event<span class="token punctuation">,</span> handler<span class="token punctuation">,</span> useCapture<span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>举个例子来说：</p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> a <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'a'</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment" spellcheck="true"> // grab the first link in the document
+</span>a<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'click'</span><span class="token punctuation">,</span> ajaxloader<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>我们在一个<code>element</code>上加了个事件监听，就好像是在命令她，“你被客人摸了你就给我喊起来！” The <code>ajaxloader()</code>是监听事件的回调方法，就好像是，“你就在这儿给我盯着，妞要是喊了，你就过去给客人道歉！” 将第三个参数<code>useCapture</code>设置为<code>false</code>是为了表示这次是在事件冒泡阶段进行触发，而不是在事件捕获阶段。咳咳，这是一个<a href="http://www.w3.org/TR/DOM-Level-3-Events/#event-flow">漫长而艰巨的课题</a>，你也可以看看<a href="http://dev.opera.com/articles/view/event-capture-explained/">Dev.Opera对capture的解释</a>。哎呀反正不用管那么多啦，99.7434％的情况下设置<code>useCapture</code>为<code>false</code>准没错！其实它默认就是false，所以按理来说是可以不用填写的，但Opera这逗比例外…</p>
+<p>在事件被触发之时，回调方法会接收到一个事件对象。请试着在恰当的环境中运行如下代码，也可以直接点击这里测试<a href="http://thewebrocks.com/demos/smashing-events/eventproperties.html">这个例子</a>，对象内的属性又够吃一盆的：</p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> log <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">getElementById<span class="token punctuation">(</span></span><span class="token string">'log'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    out <span class="token operator">=</span> <span class="token string">''</span><span class="token punctuation">;</span>
+    
+document<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'click'</span><span class="token punctuation">,</span> logeventinfo<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+document<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'keypress'</span><span class="token punctuation">,</span> logeventinfo<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">function</span> logeventinfo <span class="token punctuation">(</span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  log<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> <span class="token string">''</span><span class="token punctuation">;</span>
+  out <span class="token operator">=</span> <span class="token string">'&lt;ul&gt;'</span><span class="token punctuation">;</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">var</span> i <span class="token keyword">in</span> ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">typeof</span> ev<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">===</span> <span class="token string">'function'</span> <span class="token operator">||</span> i <span class="token operator">===</span> i<span class="token punctuation">.</span><span class="token function">toUpperCase<span class="token punctuation">(</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">continue</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    out <span class="token operator">+</span><span class="token operator">=</span> <span class="token string">'&lt;li&gt;&lt;span&gt;'</span><span class="token operator">+</span>i<span class="token operator">+</span><span class="token string">'&lt;/span&gt;: '</span><span class="token operator">+</span>ev<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token operator">+</span><span class="token string">'&lt;/li&gt;'</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  log<span class="token punctuation">.</span>innerHTML <span class="token operator">+</span><span class="token operator">=</span> out <span class="token operator">+</span> <span class="token string">'&lt;/ul&gt;'</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>你可以对同一事件进行多重监听，也可以对多个事件使用同一方法处理（如本例）。</p>
+<p>参数<code>ev</code>是传回来的事件对象，下面是它所带的全部属性：</p>
+<pre class="  language-javascript"><code class="  language-javascript">originalTarget<span class="token punctuation">:</span> <span class="token punctuation">[</span>object HTMLHtmlElement<span class="token punctuation">]</span>
+type<span class="token punctuation">:</span> click
+target<span class="token punctuation">:</span> <span class="token punctuation">[</span>object HTMLHtmlElement<span class="token punctuation">]</span>
+currentTarget<span class="token punctuation">:</span> <span class="token punctuation">[</span>object HTMLDocument<span class="token punctuation">]</span>
+eventPhase<span class="token punctuation">:</span> <span class="token number">3</span>
+bubbles<span class="token punctuation">:</span> <span class="token boolean">true</span>
+cancelable<span class="token punctuation">:</span> <span class="token boolean">true</span>
+timeStamp<span class="token punctuation">:</span> <span class="token number">574553210</span>
+defaultPrevented<span class="token punctuation">:</span> <span class="token boolean">false</span>
+which<span class="token punctuation">:</span> <span class="token number">1</span>
+rangeParent<span class="token punctuation">:</span> <span class="token punctuation">[</span>object Text<span class="token punctuation">]</span>
+rangeOffset<span class="token punctuation">:</span> <span class="token number">23</span>
+pageX<span class="token punctuation">:</span> <span class="token number">182</span>
+pageY<span class="token punctuation">:</span> <span class="token number">111</span>
+isChar<span class="token punctuation">:</span> <span class="token boolean">false</span>
+screenX<span class="token punctuation">:</span> <span class="token number">1016</span>
+screenY<span class="token punctuation">:</span> <span class="token number">572</span>
+clientX<span class="token punctuation">:</span> <span class="token number">182</span>
+clientY<span class="token punctuation">:</span> <span class="token number">111</span>
+ctrlKey<span class="token punctuation">:</span> <span class="token boolean">false</span>
+shiftKey<span class="token punctuation">:</span> <span class="token boolean">false</span>
+altKey<span class="token punctuation">:</span> <span class="token boolean">false</span>
+metaKey<span class="token punctuation">:</span> <span class="token boolean">false</span>
+button<span class="token punctuation">:</span> <span class="token number">0</span>
+relatedTarget<span class="token punctuation">:</span> <span class="token keyword">null</span>
+mozPressure<span class="token punctuation">:</span> <span class="token number">0</span>
+mozInputSource<span class="token punctuation">:</span> <span class="token number">1</span>
+view<span class="token punctuation">:</span> <span class="token punctuation">[</span>object Window<span class="token punctuation">]</span>
+detail<span class="token punctuation">:</span> <span class="token number">1</span>
+layerX<span class="token punctuation">:</span> <span class="token number">182</span>
+layerY<span class="token punctuation">:</span> <span class="token number">111</span>
+cancelBubble<span class="token punctuation">:</span> <span class="token boolean">false</span>
+explicitOriginalTarget<span class="token punctuation">:</span> <span class="token punctuation">[</span>object HTMLHtmlElement<span class="token punctuation">]</span>
+isTrusted<span class="token punctuation">:</span> <span class="token boolean">true</span>
+originalTarget<span class="token punctuation">:</span> <span class="token punctuation">[</span>object HTMLHeadingElement<span class="token punctuation">]</span>
+type<span class="token punctuation">:</span> click
+target<span class="token punctuation">:</span> <span class="token punctuation">[</span>object HTMLHeadingElement<span class="token punctuation">]</span>
+currentTarget<span class="token punctuation">:</span> <span class="token punctuation">[</span>object HTMLDocument<span class="token punctuation">]</span>
+eventPhase<span class="token punctuation">:</span> <span class="token number">3</span>
+bubbles<span class="token punctuation">:</span> <span class="token boolean">true</span>
+cancelable<span class="token punctuation">:</span> <span class="token boolean">true</span>
+timeStamp<span class="token punctuation">:</span> <span class="token number">574554192</span>
+defaultPrevented<span class="token punctuation">:</span> <span class="token boolean">false</span>
+which<span class="token punctuation">:</span> <span class="token number">1</span>
+rangeParent<span class="token punctuation">:</span> <span class="token punctuation">[</span>object Text<span class="token punctuation">]</span>
+rangeOffset<span class="token punctuation">:</span> <span class="token number">0</span>
+pageX<span class="token punctuation">:</span> <span class="token number">1</span>
+pageY<span class="token punctuation">:</span> <span class="token number">18</span>
+isChar<span class="token punctuation">:</span> <span class="token boolean">false</span>
+screenX<span class="token punctuation">:</span> <span class="token number">835</span>
+screenY<span class="token punctuation">:</span> <span class="token number">479</span>
+clientX<span class="token punctuation">:</span> <span class="token number">1</span>
+clientY<span class="token punctuation">:</span> <span class="token number">18</span>
+ctrlKey<span class="token punctuation">:</span> <span class="token boolean">false</span>
+shiftKey<span class="token punctuation">:</span> <span class="token boolean">false</span>
+altKey<span class="token punctuation">:</span> <span class="token boolean">false</span>
+metaKey<span class="token punctuation">:</span> <span class="token boolean">false</span>
+button<span class="token punctuation">:</span> <span class="token number">0</span>
+relatedTarget<span class="token punctuation">:</span> <span class="token keyword">null</span>
+mozPressure<span class="token punctuation">:</span> <span class="token number">0</span>
+mozInputSource<span class="token punctuation">:</span> <span class="token number">1</span>
+view<span class="token punctuation">:</span> <span class="token punctuation">[</span>object Window<span class="token punctuation">]</span>
+detail<span class="token punctuation">:</span> <span class="token number">1</span>
+layerX<span class="token punctuation">:</span> <span class="token number">1</span>
+layerY<span class="token punctuation">:</span> <span class="token number">18</span>
+cancelBubble<span class="token punctuation">:</span> <span class="token boolean">false</span>
+explicitOriginalTarget<span class="token punctuation">:</span> <span class="token punctuation">[</span>object Text<span class="token punctuation">]</span>
+isTrusted<span class="token punctuation">:</span> <span class="token boolean">true</span></code></pre>
+<p>试一下本例中点击鼠标和按键盘，不同的事件触发传回来的结果是不同的。可以看看完整的<a href="https://developer.mozilla.org/en/DOM/event#Properties">标准事件属性列表</a>。</p>
+<h3>知晓基础之后：阻止事件默认行为的执行和获得触发事件的目标元素</h3>
+<p>我们需要了解浏览器中关于事件对象有两个很重要的功能。阻止浏览器执行事件默认行为的<code>ev.preventDefault()</code>，和可以获得事件目标元素的<code>ev.target</code>.</p>
+<p><span>比如说一个链接被点击了，但因为业务需要，我们并不想让浏览器打开新页面。这时候可以给这个链接加个点击事件监听，然后在回调函数中调用</span>&nbsp;<code>preventDefault()</code>方法即可。昂，就如下面这个例子，请看HTML：</p>
+<pre class="  language-markup"><code class=" tmp-html  language-markup"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>prevent<span class="token punctuation">"</span></span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://smashingmagazine.com<span class="token punctuation">"</span></span><span class="token punctuation">&gt;</span></span>Smashing, my dear!<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">&gt;</span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>normal<span class="token punctuation">"</span></span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>http://smashingmagazine.com<span class="token punctuation">"</span></span><span class="token punctuation">&gt;</span></span>Smashing, my dear!<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">&gt;</span></span></code></pre>
+<p>还有JavaScript：</p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> normal <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'.normal'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    prevent <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'.prevent'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+prevent<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'click'</span><span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token function">alert<span class="token punctuation">(</span></span><span class="token string">'fabulous, really!'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  ev<span class="token punctuation">.</span><span class="token function">preventDefault<span class="token punctuation">(</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+normal<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'click'</span><span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token function">alert<span class="token punctuation">(</span></span><span class="token string">'fabulous, really!'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>注意：&nbsp;<code>document.querySelector()</code>&nbsp;是合理获取DOM元素的一种方式。和jQuery的&nbsp;<code>$()</code>&nbsp;差不多。 可以读读&nbsp;<a href="http://www.w3.org/TR/selectors-api/">W3C’s specification</a>&nbsp;和MDN的&nbsp;<a href="https://developer.mozilla.org/En/Code_snippets/QuerySelector">explanatory code snippets</a>&nbsp;去了解。</p>
+<p>如果点击.prevent链接，会弹出个对话框，点“确定”后啥事都没发生，呵～呵～，因为处理中有执行ev.preventDefault()，所以不会跳到&nbsp;<code>http://smashingmagazine.com</code>。没有&nbsp;<code>preventDefault()</code>的就会在弹对话框，且跳链接咯。<a href="http://thewebrocks.com/demos/smashing-events/preventdefault.html">不信你可以试一下嘛</a>。</p>
+<p><span>通常情况下，处理事件的方法想要访问触发元素只能通过变量和this什么的去关联，虽然看似简单方便，但</span><span lang="EN-US">addEventListener()</span><span>给了我们更好的选择：事件目标（</span><span>target</span><span>），不过它可能被其他的一些东西混淆，所以用</span><span>ev.currentTarget</span><span>更保险些。通常想要在点击、悬停或输入事件的回调方法中访问触发元素都是用变量</span>&nbsp;<code>this</code>&nbsp;。虽然方便，但这个关键字你懂得…于是&nbsp;<code>addEventListener()</code>&nbsp;提供给我们一个更好的获取方式：event.target。 不过它可能会被混淆（&nbsp;<code>this</code>&nbsp;被绑到奇怪的东西上的时候），所以用&nbsp;<code>ev.currentTarget</code>&nbsp;更保险些。</p>
+<h3>事件代理：高端，大气，上档次！</h3>
+<p>用事件对象的&nbsp;<code>target</code>&nbsp;<span>属性，你可以得到触发事件的元素。</span></p>
+<p><span>事件被激活后，会像猴子一样沿着</span><span lang="EN-US">DOM</span><span>树从监听节点下滑到触发</span><span>节点</span><span>，然后再上爬回监听</span><span>节点</span><span>。也就是说，如果你监听了一个DOM节点，那也就等于你监听了其所有的后代节点。代理的意思就是只监听父节点的事件触发，以来代理对其后代节点的监听，而你需要做的只是通过&nbsp;</span><span lang="EN-US">target 属性</span><span>得到触发元素并作出回应。</span><a href="http://thewebrocks.com/demos/smashing-events/eventdelegation.html">来看我下面的例子</a><span>：</span></p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token operator">&lt;</span>ul id<span class="token operator">=</span><span class="token string">"resources"</span><span class="token operator">&gt;</span>
+  <span class="token operator">&lt;</span>li<span class="token operator">&gt;</span><span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"http://developer.mozilla.org"</span><span class="token operator">&gt;</span>MDN<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">&gt;</span><span class="token operator">&lt;</span><span class="token operator">/</span>li<span class="token operator">&gt;</span>
+  <span class="token operator">&lt;</span>li<span class="token operator">&gt;</span><span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"http://html5doctor.com"</span><span class="token operator">&gt;</span>HTML5 Doctor<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">&gt;</span><span class="token operator">&lt;</span><span class="token operator">/</span>li<span class="token operator">&gt;</span>
+  <span class="token operator">&lt;</span>li<span class="token operator">&gt;</span><span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"http://html5rocks.com"</span><span class="token operator">&gt;</span>HTML5 Rocks<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">&gt;</span><span class="token operator">&lt;</span><span class="token operator">/</span>li<span class="token operator">&gt;</span>
+  <span class="token operator">&lt;</span>li<span class="token operator">&gt;</span><span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"http://beta.theexpressiveweb.com/"</span><span class="token operator">&gt;</span>Expressive Web<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">&gt;</span><span class="token operator">&lt;</span><span class="token operator">/</span>li<span class="token operator">&gt;</span>
+  <span class="token operator">&lt;</span>li<span class="token operator">&gt;</span><span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"http://creativeJS.com/"</span><span class="token operator">&gt;</span>CreativeJS<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">&gt;</span><span class="token operator">&lt;</span><span class="token operator">/</span>li<span class="token operator">&gt;</span>
+<span class="token operator">&lt;</span><span class="token operator">/</span>ul<span class="token operator">&gt;</span></code></pre>
+<p><span>这个例子中的</span><span lang="EN-US">HTML</span><span>结构是个无序列表，当鼠标悬停会显示相应的标签信息。下面是它</span><span lang="EN-US">JS</span><span>代码，你将看到它只用到了一个事件监听，然后在处理函数中得到</span><span lang="EN-US">target</span><span>，以它的</span>&nbsp;<code>tagName</code>&nbsp;<span>来进行区分。</span></p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> resources <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'#resources'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    log <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'#log'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+resources<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'mouseover'</span><span class="token punctuation">,</span> showtarget<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">function</span> <span class="token function">showtarget<span class="token punctuation">(</span></span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">var</span> target <span class="token operator">=</span> ev<span class="token punctuation">.</span>target<span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>target<span class="token punctuation">.</span>tagName <span class="token operator">===</span> <span class="token string">'A'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    log<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> <span class="token string">'A link, with the href:'</span> <span class="token operator">+</span> target<span class="token punctuation">.</span>href<span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>target<span class="token punctuation">.</span>tagName <span class="token operator">===</span> <span class="token string">'LI'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    log<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> <span class="token string">'A list item'</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>target<span class="token punctuation">.</span>tagName <span class="token operator">===</span> <span class="token string">'UL'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    log<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> <span class="token string">'The list itself'</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p><span>我费事吧啦解释了半天，乃们懂得这么做意味着什么么？这意味着你可以节省大量重复的事件监听，以减少浏览器资源消耗。大多数人可能会用</span>jQuery的<code>$('a').click(...)</code>&nbsp;啥啥啥的（虽然<span>&nbsp;jQuery的&nbsp;</span><code style="line-height: 1.4em;">on</code><span>&nbsp;方法优化的还OK啦不过偶还是蛮鄙视他的</span><span>），这么做看似一句话蛮带感的，可其实它是把获取到的所有A元素一个一个的注册</span><span>监听</span><span>！然后在某个时刻，充斥着无数事件监听的页面终于觉累不爱，自爆以鸣冤屈</span><span>。</span></p>
+<p><span>她还有一个好处就是让</span><span lang="EN-US">HTML</span><span>独立起来，比如之后还有要加子元素的需求，也不需要再为其单独加事件监听了。</span></p>
+<h3>事件监测，顺便说一下超级牛逼的CSS平滑效果</h3>
+<p>以前我们会用mouseover|mouseout事件来暗挫挫的实现hover效果，而现在用CSS伪选择器的<code>:hover</code>和<code>:focus</code>什么的就直接搞定了。想到这里，内心止不住的伤感啊……魔法师们坚持住！咳咳，当然，CSS也并不是万能的，有些事情还是要跟事件配合完成，比如下面这个例子，对鼠标指针进行定位。这是相当简单的了是不，我们先搞个绝对定位的小球元素，下面是它的HTML：</p>
+<pre class="  language-markup"><code class=" tmp-html  language-markup"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>plot<span class="token punctuation">"</span></span><span class="token punctuation">&gt;</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">&gt;</span></span></code></pre>
+<p>这是它的CSS：</p>
+<pre class="  language-css"><code class="  language-css"><span class="token selector"><span class="token class">.plot</span> </span><span class="token punctuation">{</span>
+  <span class="token property">position</span><span class="token punctuation">:</span>absolute<span class="token punctuation">;</span>
+  <span class="token property">background</span><span class="token punctuation">:</span><span class="token function">rgb</span>(<span class="token number">175</span>,<span class="token number">50</span>,<span class="token number">50</span>)<span class="token punctuation">;</span>
+  <span class="token property">width</span><span class="token punctuation">:</span> <span class="token number">20</span>px<span class="token punctuation">;</span>
+  <span class="token property">height</span><span class="token punctuation">:</span> <span class="token number">20</span>px<span class="token punctuation">;</span>
+  <span class="token property">border-radius</span><span class="token punctuation">:</span> <span class="token number">20</span>px<span class="token punctuation">;</span>
+  <span class="token property">display</span><span class="token punctuation">:</span> block<span class="token punctuation">;</span>
+  <span class="token property">top</span><span class="token punctuation">:</span><span class="token number">0</span><span class="token punctuation">;</span>
+  <span class="token property">left</span><span class="token punctuation">:</span><span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>我们监听并处理doucment的click事件，利用<code><a href="https://developer.mozilla.org/en/DOM/event.pageX">PageX</a></code>和<code>pageY</code>对小球进行定位。注意啊这里，我们需要减去球的半径，以让球的中心在鼠标指针上：</p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> plot <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'.plot'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    offset <span class="token operator">=</span> plot<span class="token punctuation">.</span>offsetWidth <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">;</span>
+document<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'click'</span><span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  plot<span class="token punctuation">.</span>style<span class="token punctuation">.</span>left <span class="token operator">=</span> <span class="token punctuation">(</span>ev<span class="token punctuation">.</span>pageX <span class="token operator">-</span> offset<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">'px'</span><span class="token punctuation">;</span>
+  plot<span class="token punctuation">.</span>style<span class="token punctuation">.</span>top <span class="token operator">=</span> <span class="token punctuation">(</span>ev<span class="token punctuation">.</span>pageY <span class="token operator">-</span> offset<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">'px'</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>随便点击屏幕的任意位置，小球都会随之闪现到那。不过它并不是平滑过去的，但如果你<a href="http://thewebrocks.com/demos/smashing-events/mouseposition.html">勾选这个示例的复选框</a>，你会发现小球就会很圆润的滑过来了。这个效果呢，过去的话可能只能用JS库来完成，但现在啊，时代不同了……我们只需要用CSS写个过渡效果的类，而剩下的事情就让浏览器去处理。为至于此，我们写个类名为<code>smooth</code>的样式，在复选框被选中之后，将其应用到小球上：</p>
+<pre class="  language-css"><code class="  language-css"><span class="token selector"><span class="token class">.smooth</span> </span><span class="token punctuation">{</span>
+  <span class="token property">-webkit-transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+     <span class="token property">-moz-transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+      <span class="token property">-ms-transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+       <span class="token property">-o-transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+          <span class="token property">transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>添加JavaScript：</p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> cb <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'input[type=checkbox]'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+cb<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'click'</span><span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  plot<span class="token punctuation">.</span>classList<span class="token punctuation">.</span><span class="token function">toggle<span class="token punctuation">(</span></span><span class="token string">'smooth'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>随着新世界的来临，CSS和JavaScript双剑合璧，谁与争锋！嘛顺便说下，在JS中也有跟CSS过渡和动画效果有关的事件噢。</p>
+<h3>撸一个键需要多长时间？</h3>
+<p>正如你之前在可用事件列表中看到的，我们也可以监听按键输入事件。不过很遗憾的是，浏览器对键盘事件处理的并不是很到位，你可以看看<a href="http://unixpapa.com/js/key.html">Jan Wolter对此的详细解释</a>接下来让我们看一个<a href="http://thewebrocks.com/demos/smashing-events/keytime.html">keytime</a>的例子，它会输出用户按键的毫秒间隔。代码并不难：</p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> resources <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'#resources'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    log <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'#log'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    time <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+document<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'keydown'</span><span class="token punctuation">,</span> keydown<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+document<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'keyup'</span><span class="token punctuation">,</span> keyup<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">function</span> <span class="token function">keydown<span class="token punctuation">(</span></span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>time <span class="token operator">===</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> 
+    time <span class="token operator">=</span> ev<span class="token punctuation">.</span>timeStamp<span class="token punctuation">;</span> 
+    log<span class="token punctuation">.</span>classList<span class="token punctuation">.</span><span class="token function">add<span class="token punctuation">(</span></span><span class="token string">'animate'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">function</span> <span class="token function">keyup<span class="token punctuation">(</span></span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>time <span class="token operator">!</span><span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    log<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> ev<span class="token punctuation">.</span>timeStamp <span class="token operator">-</span> time<span class="token punctuation">;</span>
+    time <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    log<span class="token punctuation">.</span>classList<span class="token punctuation">.</span><span class="token function">remove<span class="token punctuation">(</span></span><span class="token string">'animate'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>先定义我们想要操纵的元素并设置<code>time</code>为<code>0</code>。然后我们在document上监听两个键盘输入事件 <code>keydown</code>和<code>keyup</code>。</p>
+<p>在<code>keydown</code>事件处理中，我们检查变量<code>time</code>是否为<code>0</code>，如果是则把事件对象的<code>timeStamp</code>赋值给<code>time</code>。再加个CSS动画类animate给log节点，让它向滚动条一样动起来</p>
+<p>在<code>keyup</code>事件处理中，如果<code>time</code>还是为<code>0</code>则忽略（在按着键盘的期间<code>keydown</code>事件是连续不断被触发的），如果不是则通过两者时间戳相减去计算一次按键操作经过多长时间。最后让<code>time</code>为<code>0</code>并移除log节点的animate类</p>
+<h3>弄个CSS过渡（动画）效果</h3>
+<p>当浏览器运行<a href="https://developer.mozilla.org/en/CSS/CSS_transitions">CSS过渡效果</a>是会在JavaScript中触发一个独立事件，叫<code>transitionend</code>。这个事件对象会有两个属性：被其所影响到的属性名<code>propertyName</code>，和其过渡所经历的时间<code>elapsedTime</code>。</p>
+<p>可以查看这个<a href="http://thewebrocks.com/demos/smashing-events/transitionevent.html">demo</a>感受一下，代码很简单，下面是它的CSS：</p>
+<pre class="  language-css"><code class="  language-css"><span class="token selector"><span class="token class">.plot</span> </span><span class="token punctuation">{</span>
+  <span class="token property">background</span><span class="token punctuation">:</span><span class="token function">rgb</span>(<span class="token number">175</span>,<span class="token number">50</span>,<span class="token number">50</span>)<span class="token punctuation">;</span>
+  <span class="token property">width</span><span class="token punctuation">:</span> <span class="token number">20</span>px<span class="token punctuation">;</span>
+  <span class="token property">height</span><span class="token punctuation">:</span> <span class="token number">20</span>px<span class="token punctuation">;</span>
+  <span class="token property">border-radius</span><span class="token punctuation">:</span> <span class="token number">20</span>px<span class="token punctuation">;</span>
+  <span class="token property">display</span><span class="token punctuation">:</span> block<span class="token punctuation">;</span>
+  <span class="token property">-webkit-transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+     <span class="token property">-moz-transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+      <span class="token property">-ms-transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+       <span class="token property">-o-transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+          <span class="token property">transition</span><span class="token punctuation">:</span> <span class="token number">0.5</span>s<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token selector"><span class="token class">.plot</span><span class="token pseudo-class">:hover</span> </span><span class="token punctuation">{</span>
+  <span class="token property">width</span><span class="token punctuation">:</span> <span class="token number">50</span>px<span class="token punctuation">;</span>
+  <span class="token property">height</span><span class="token punctuation">:</span> <span class="token number">50</span>px<span class="token punctuation">;</span>
+  <span class="token property">border-radius</span><span class="token punctuation">:</span> <span class="token number">100</span>px<span class="token punctuation">;</span>
+  <span class="token property">background</span><span class="token punctuation">:</span> blue<span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>这是它的JavaScript：</p>
+<pre class="  language-javascript"><code class="  language-javascript">plot<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'transitionend'</span><span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  log<span class="token punctuation">.</span>innerHTML <span class="token operator">+</span><span class="token operator">=</span> ev<span class="token punctuation">.</span>propertyName <span class="token operator">+</span> <span class="token string">':'</span> <span class="token operator">+</span> ev<span class="token punctuation">.</span>elapsedTime <span class="token operator">+</span> <span class="token string">'s '</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>但因为Fire/Chrome/Safari/Opera等这些浏览器厂商各自为政，也是因为这些事件还不成熟，所以这些事件名通常都会被加上前缀，那在使用时你就不得不判断下浏览器兼容性。可以看看这个<a href="https://gist.github.com/702826">David Calhoun’s gist</a>。</p>
+<p><a href="https://developer.mozilla.org/en/CSS/CSS_animations">CSS动画事件</a>和上面演示的过渡事件基本一个意思，它有三个事件：<code>animationstart</code>，<code>animationend</code>和<code>animationiteration</code>。可以看<a href="https://developer.mozilla.org/samples/cssref/animations/animevents.html">MDN的demo</a>。</p>
+<h3>速度，距离和角度，没有问题！</h3>
+<p>事件我们是监听到了，但如果想让它更加屌炸天，我们就需要再来点有深度的，比如在用户在拖拽元素时，给元素来个计算角度、距离和速度差什么的——<a href="http://thewebrocks.com/demos/smashing-events/speeddistanceangle.html">示例</a>。</p>
+<pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">var</span> plot <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'.plot'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    log <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">querySelector<span class="token punctuation">(</span></span><span class="token string">'output'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    offset <span class="token operator">=</span> plot<span class="token punctuation">.</span>offsetWidth <span class="token operator">/</span> <span class="token number">2</span><span class="token punctuation">,</span>
+    pressed <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+    start <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> x <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> y <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> end <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> ex <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> ey <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> mx <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> my <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> 
+    duration <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> dist <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> angle <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+document<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'mousedown'</span><span class="token punctuation">,</span> onmousedown<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+document<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'mouseup'</span><span class="token punctuation">,</span> onmouseup<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+document<span class="token punctuation">.</span><span class="token function">addEventListener<span class="token punctuation">(</span></span><span class="token string">'mousemove'</span><span class="token punctuation">,</span> onmousemove<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">function</span> <span class="token function">onmousedown<span class="token punctuation">(</span></span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>start <span class="token operator">===</span> <span class="token number">0</span> <span class="token operator">&amp;&amp;</span> x <span class="token operator">===</span> <span class="token number">0</span> <span class="token operator">&amp;&amp;</span> y <span class="token operator">===</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    start <span class="token operator">=</span> ev<span class="token punctuation">.</span>timeStamp<span class="token punctuation">;</span>
+    x <span class="token operator">=</span> ev<span class="token punctuation">.</span>clientX<span class="token punctuation">;</span>
+    y <span class="token operator">=</span> ev<span class="token punctuation">.</span>clientY<span class="token punctuation">;</span>
+    <span class="token function">moveplot<span class="token punctuation">(</span></span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    pressed <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">function</span> <span class="token function">onmouseup<span class="token punctuation">(</span></span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  end <span class="token operator">=</span> ev<span class="token punctuation">.</span>timeStamp<span class="token punctuation">;</span>
+  duration <span class="token operator">=</span> end <span class="token operator">-</span> start<span class="token punctuation">;</span>
+  ex <span class="token operator">=</span> ev<span class="token punctuation">.</span>clientX<span class="token punctuation">;</span>
+  ey <span class="token operator">=</span> ev<span class="token punctuation">.</span>clientY<span class="token punctuation">;</span>
+  mx <span class="token operator">=</span> ex <span class="token operator">-</span> x<span class="token punctuation">;</span>
+  my <span class="token operator">=</span> ey <span class="token operator">-</span> y<span class="token punctuation">;</span>
+  dist <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">sqrt<span class="token punctuation">(</span></span>mx <span class="token operator">*</span> mx <span class="token operator">+</span> my <span class="token operator">*</span> my<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  start <span class="token operator">=</span> x <span class="token operator">=</span> y <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+  pressed <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+  angle <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">atan2<span class="token punctuation">(</span></span> my<span class="token punctuation">,</span> mx <span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">180</span> <span class="token operator">/</span> Math<span class="token punctuation">.</span>PI<span class="token punctuation">;</span>
+  log<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> <span class="token string">'&lt;strong&gt;'</span> <span class="token operator">+</span> <span class="token punctuation">(</span>dist<span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">+</span><span class="token string">'&lt;/strong&gt; pixels in &lt;strong&gt;'</span><span class="token operator">+</span>
+                  duration <span class="token operator">+</span><span class="token string">'&lt;/strong&gt; ms ( &lt;strong&gt;'</span> <span class="token operator">+</span>
+                  <span class="token function">twofloat<span class="token punctuation">(</span></span>dist<span class="token operator">/</span>duration<span class="token punctuation">)</span> <span class="token operator">+</span><span class="token string">'&lt;/strong&gt; pixels/ms)'</span><span class="token operator">+</span>
+                  <span class="token string">' at &lt;strong&gt;'</span> <span class="token operator">+</span> <span class="token function">twofloat<span class="token punctuation">(</span></span>angle<span class="token punctuation">)</span> <span class="token operator">+</span>
+                  <span class="token string">'&lt;/strong&gt; degrees'</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">function</span> onmousemove <span class="token punctuation">(</span>ev<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>pressed<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">moveplot<span class="token punctuation">(</span></span>ev<span class="token punctuation">.</span>pageX<span class="token punctuation">,</span> ev<span class="token punctuation">.</span>pageY<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">function</span> <span class="token function">twofloat<span class="token punctuation">(</span></span>val<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> Math<span class="token punctuation">.</span><span class="token function">round<span class="token punctuation">(</span></span><span class="token punctuation">(</span>val<span class="token operator">*</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token operator">/</span><span class="token number">100</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">function</span> <span class="token function">moveplot<span class="token punctuation">(</span></span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  plot<span class="token punctuation">.</span>style<span class="token punctuation">.</span>left <span class="token operator">=</span> <span class="token punctuation">(</span>x <span class="token operator">-</span> offset<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">'px'</span><span class="token punctuation">;</span>
+  plot<span class="token punctuation">.</span>style<span class="token punctuation">.</span>top <span class="token operator">=</span> <span class="token punctuation">(</span>y <span class="token operator">-</span> offset<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">'px'</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>好啦，好像做了很多事情的样子，但事实上并没有那么复杂。监听<code>onmousedown</code>和<code>onmouseup</code>两个事件，我们能得到鼠标当前位置<code>clientX</code>和<code>clientY</code>，还有记录按键时间的<code>timeStamp</code>。当鼠标移动时，检查鼠标是否被按下了（通过在<code>mousedown</code>时设定的布尔值），如果按下了则让小球跟着鼠标移动。</p>
+<p>然后是几何——<a href="http://en.wikipedia.org/wiki/Pythagorean_theorem">Pythagoras（毕达哥拉斯定理）</a>通过<code>mousedown</code>和<code>mouseup</code>的时间间隔和像素位移而得出它运动的速度。</p>
+<p>我们得到了运动开始和结束的xy坐标，相减得到距离差，再平方相加，最后得到和的平方根，即为小球运动的位移。嘛我们还通过计算三角形的反正切得到了它运动前后的偏转角度，高端吧！嘿嘿其实这些都是抄“<a href="http://coding.smashingmagazine.com/2011/10/04/quick-look-math-animations-javascript/">A Quick Look Into the Math of Animations With JavaScript</a>”的……你可以看下这个在JSFiddle上的示例：</p>
+<p><iframe style="width: 100%; height: 400px; margin-top: 20px;" src="http://jsfiddle.net/codepo8/bAwUf/embedded/result,js,html,css" allowfullscreen="allowfullscreen" frameborder="0"></iframe></p>
+<h3>媒体事件</h3>
+<p>video和audio这俩很潮的玩意也有一大堆事件供我们使用。比如有趣的time事件，它可以告诉我们这首歌或电影的已播放时长。可以看看MDN这个<a href="http://hacks.mozilla.org/2012/03/making-the-dino-roar-syncing-audio-and-css-transitions/">MGM-inspired dinosaur animation</a>；我也没事闲的录制了一个<a href="http://coding.smashingmagazine.com/2012/08/17/javascript-events-responding-user/www.youtube.com/watch?v=aFIJ_ZpV-8Q">six-minute screencast</a>来玩弄了一下~。</p>
+<p>想看所有的事件动作？去JPlayer看<a href="http://www.jplayer.org/HTML5.Media.Event.Inspector/">媒体事件的演示页面</a>吧。</p>
+<h3>其他输入相关</h3>
+<p>我们知道，浏览器提供了与鼠标键盘的交互，但这还远远不够满足我们更多的硬件交互需求。比如检测手机或平板电脑倾斜度的<a href="https://developer.mozilla.org/en/DOM/DeviceOrientationEvent">Device orientation</a>和<a href="https://developer.mozilla.org/en/DOM/Touch_events"> touch events</a>。<a href="http://hacks.mozilla.org/2011/12/paving-the-way-for-open-games-on-the-web-with-the-gamepad-and-mouse-lock-apis/">the Gamepad API</a>让我们可以在浏览器中做游戏控制；<a href="https://developer.mozilla.org/en/DOM/window.postMessage">postMessage</a>让我们可以在浏览器各窗口之间进行跨域消息传递；<a href="https://developer.mozilla.org/en/DOM/Using_the_Page_Visibility_API">pageVisibility</a>让我们可以得知浏览器中当前标签页可见状态。甚至<a href="https://developer.mozilla.org/en/DOM/window.onpopstate">当window的history对象有操作时</a>也能监听的到。查看window对象的事件列表，有的可能已经被实现了，还有更多的在谋划中……</p>
+<p>嘛，不管浏览器是否会支持，最终都是要支持的嘛，这些是刚需。我们只要默默等待就可以了，骚年，向着夕阳奔跑吧！=v=</p>
+<h3>玩出个未来</h3>
+<p>基本上就这样了，看，事件并不难。一般情况下，你只需要注册监听他们，然后在事件处理函数中使用event对象就好了。如果到现在你还没想到它能做些什么有趣的事情，那这篇文章也只能帮你倒这里了。别再管上文的那些例子了，请你用你那上锈的脑袋好好思考下，玩愤怒小鸟时候，不就是监听个触摸事件的开始与结束，再处理下相应的方向和距离差所得出的射击力量么？最后嗖的一声，小鸟就自由飞翔在远方了~。所以，究竟是什么阻止了你的创意？该加了个油了，同学。</p>
+
+
+                            
+    </article>  
+    <div class="bio clearfix" style="margin-left: 30px;">        
+        <div class="about">
+            <a rel="author" href="http://coding.smashingmagazine.com/author/christian-heilmann/?rel=author" title="Posts by Christian Heilmann" class="post-author">将火把扔向柴火堆的FFF团忠诚教徒·海尔曼</a>            <p>来自英国伦敦，乃大Mozilla开发者中心的一名传道士</p>
+        </div>
+    </div>
+    <div class="bio clearfix" style="margin-left: 30px;text-align: right;">        
+        <div class="about">
+            <a rel="author" href="http://coding.smashingmagazine.com/author/christian-heilmann/?rel=author" title="Posts by Christian Heilmann" class="post-author">译者：添柴火的FFF团初级伙食兵·茶几（chajn）</a>            <p>历时8个小时，完稿于2013年9月26日那个忧伤的夜晚</p>
+        </div>
+    </div>
+</div>                
+</div>
+</div>
+</div>
+</body></html>
